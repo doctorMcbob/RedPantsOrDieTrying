@@ -26,7 +26,7 @@ Pixel Art:
        [x] RISING
        [x] AIR
        [x] FALLING
-       [] LANDING
+       [x] LANDING
        [] FASTFALLING
        [] DIVE
        [] DIVELAND
@@ -37,8 +37,8 @@ Pixel Art:
 Programming:
     [/] architecture
     [/] player movement
-       [.] left right
-       [x?] jump
+       [x] left right
+       [x] jump
        [] fastfall
        [] dive
        [x] gravity
@@ -62,11 +62,13 @@ W="W";H="H";X="X";Y="Y";STATE="STATE";MOV="MOV";JMP="JMP";SPEED="SPEED"
 DIR="DIR";TRACTION="TRACTION";X_VEL="X_VEL";Y_VEL="Y_VEL";JMPSPEED="JMPSPEED"
 GRAV="GRAV";PLATS="PLATS";ENEMIES="ENEMIES";SPIKES="SPIKES";LVL="LVL"
 AIR="AIR";DRIFT="DRIFT";FRAME="FRAME";LANDF="LANDF";JSQUATF="JSQUATF"
+SCROLL="SCROLL"
 FA="FA"
 
 G = {
     W:960,H:480,
     X:0,Y:0,
+    SCROLL:[0, 0],
     X_VEL:0,Y_VEL:0,
     STATE:"IDLE",DIR:1,MOV:0,JMP:0,
 
@@ -78,6 +80,11 @@ G = {
     
     FA: '-f' not in sys.argv,
 }
+
+def scroll(x, y): return x+G[SCROLL][0], y+G[SCROLL][1]
+def adjust_scroller():
+    G[SCROLL][0] = 0 - G[X] + (G[W]/2) - 16
+    G[SCROLL][1] = 0 - G[Y] + (G[H]/2) - 32
 
 DEMO = {
     PLATS:[(-G[W], 400, G[W]*3, 96, 2), (420, 336, 126, 64, 1), (612, 400-126, 64, 126, 1),
@@ -97,13 +104,11 @@ from data import sprites
 
 def drawn_player(G=G): #placeholder untill i have pixel art
     if G[STATE] in sprites: return sprites[G[STATE]]
-    if G[STATE]+":"+str(G[FRAME]) in sprites: return sprites[G[STATE]+":"+str(G[FRAME])]
-    surf = Surface((64, 64))
-    surf.fill((0, 255, 0))
-    surf.blit(HEL16.render("Player", 0, (0, 0, 0)), (0, 0))
-    surf.blit(HEL16.render(G[STATE], 0, (0, 0, 0)), (0, 16))
-    return surf
-
+    f = G[FRAME]
+    while f>=0:
+        if G[STATE]+":"+str(f) in sprites: return sprites[G[STATE]+":"+str(f)]
+        f -= 1
+    raise IndexError("no sprite found for player "+G[STATE])
 
 def drawn_platform(plat):
     surf = Surface((plat[2], plat[3]))
@@ -115,8 +120,8 @@ def drawn_platform(plat):
 def drawn(G=G):
     surf = Surface((G[W], G[H]))
     surf.fill((255, 255, 255)) #draw background -- later
-    for plat in G[LVL][PLATS]: surf.blit(drawn_platform(plat), (plat[0], plat[1]))
-    surf.blit(pygame.transform.flip(drawn_player(G), G[DIR]>0, 0), (G[X],G[Y]))
+    for plat in G[LVL][PLATS]: surf.blit(drawn_platform(plat), scroll(plat[0], plat[1]))
+    surf.blit(pygame.transform.flip(drawn_player(G), G[DIR]>0, 0), scroll(G[X],G[Y]))
     return surf
 
 
@@ -130,7 +135,7 @@ def player_state_machine(G=G):
             G[FRAME] = 0
     
     if G[STATE] == "RUN":
-        G[FRAME] = G[FRAME] % 4
+        G[FRAME] = G[FRAME] % 30
         G[X_VEL] = G[SPEED] * G[DIR]
         if G[MOV] != G[DIR]:
             G[STATE] = "SLIDE"
@@ -199,8 +204,8 @@ def hit_detection(G=G):
             G[Y_VEL] += 1 if G[Y_VEL] < 0 else -1
 
 def advance_frame(input_get, G=G):
-    # parse input
     CLOCK.tick(30)
+    adjust_scroller()
     frame_advance = G[FA]
     for e in input_get():
         if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE: quit()
