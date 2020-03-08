@@ -1,4 +1,5 @@
 """
+Red Pants of Die Trying
 this time, its personal
 
 the next big blockbuster red pants game, this time no deadlines
@@ -21,10 +22,10 @@ Pixel Art:
        [] CROUCH
        [x] RUN
        [x] SLIDE
-       [] JUMPSQUAT
-       [] RISING
-       [] AIR
-       [] FALLING
+       [x] JUMPSQUAT
+       [x] RISING
+       [x] AIR
+       [x] FALLING
        [] LANDING
        [] FASTFALLING
        [] DIVE
@@ -61,6 +62,7 @@ W="W";H="H";X="X";Y="Y";STATE="STATE";MOV="MOV";JMP="JMP";SPEED="SPEED"
 DIR="DIR";TRACTION="TRACTION";X_VEL="X_VEL";Y_VEL="Y_VEL";JMPSPEED="JMPSPEED"
 GRAV="GRAV";PLATS="PLATS";ENEMIES="ENEMIES";SPIKES="SPIKES";LVL="LVL"
 AIR="AIR";DRIFT="DRIFT";FRAME="FRAME";LANDF="LANDF";JSQUATF="JSQUATF"
+FA="FA"
 
 G = {
     W:960,H:480,
@@ -73,10 +75,12 @@ G = {
     
     SPEED:10,TRACTION:2,DRIFT:2,
     JMPSPEED:-24,GRAV:2,AIR:16,
+    
+    FA: '-f' not in sys.argv,
 }
 
 DEMO = {
-    PLATS:[(0, 400, G[W], 96, 2), (420, 336, 64, 64, 1), (612, 400-126, 64, 126, 1),
+    PLATS:[(-G[W], 400, G[W]*3, 96, 2), (420, 336, 126, 64, 1), (612, 400-126, 64, 126, 1),
            (420-(64*3), 336-126, 64, 64, 1), (420-(64*6), 336-126-64, 126, 64, 1)],
     ENEMIES:[],
     SPIKES:[],
@@ -85,7 +89,7 @@ DEMO = {
 G[LVL] = DEMO
 
 SCREEN = pygame.display.set_mode((G[W], G[H]))
-pygame.display.set_caption("you can do this")
+pygame.display.set_caption("lookin good")
 CLOCK = pygame.time.Clock()
 HEL16 = pygame.font.SysFont("Helvetica", 16)
 
@@ -171,6 +175,7 @@ def player_state_machine(G=G):
             G[STATE] = "IDLE"
             G[FRAME] = 0
 
+    G[JMP] = 0
 
 def hit_detection(G=G):
     #platform hit detection
@@ -184,6 +189,7 @@ def hit_detection(G=G):
         while hitbox.move(0, G[Y_VEL]).collidelist(plats) != -1:
             G[Y_VEL] += 1 if G[Y_VEL] < 0 else -1
         if flag and not G[Y_VEL]:
+            # i dont love changing the state here but it seems fine
             if G[STATE] in ["FALLING", "AIR"]:
                 G[STATE] = "LAND"
                 G[FRAME] = 0
@@ -195,22 +201,29 @@ def hit_detection(G=G):
 def advance_frame(input_get, G=G):
     # parse input
     CLOCK.tick(30)
-    G[JMP] = 0
+    frame_advance = G[FA]
     for e in input_get():
         if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE: quit()
         if e.type == KEYDOWN:
-            if e.key == K_RIGHT: G[MOV] += 1
-            if e.key == K_LEFT: G[MOV] += -1
+            if e.key == K_RIGHT: G[MOV] = min(G[MOV] + 1, 1)
+            if e.key == K_LEFT: G[MOV] = max(G[MOV] - 1, -1)
             if e.key == K_SPACE: G[JMP] += 1
+
+            if e.key == K_d and "-d" in sys.argv: G[FA] = not G[FA]
+            if e.key == K_n: frame_advance = True
+
         if e.type == KEYUP:
             if e.key == K_RIGHT: G[MOV] -= 1
             if e.key == K_LEFT: G[MOV] -= -1
 
+    
     #state machine -> hit detection -> move
-    player_state_machine(G)
-    hit_detection(G)
-    G[X] += G[X_VEL]
-    G[Y] += G[Y_VEL]
+    if frame_advance:
+        if not G[FA]: debug()
+        player_state_machine(G)
+        hit_detection(G)
+        G[X] += G[X_VEL]
+        G[Y] += G[Y_VEL]
     
 gkeys = list(G.keys())
 gkeys.sort()
@@ -220,7 +233,6 @@ def debug(G=G):
         print(key + " | ", G[key])
         
 while __name__ == """__main__""":
-    if '-d' in sys.argv: debug()
     advance_frame(pygame.event.get)
     SCREEN.blit(drawn(), (0, 0))
     pygame.display.update()

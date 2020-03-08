@@ -22,6 +22,12 @@ sheet_data = {
     "RUN:3": ((256, 0), (64, 64)),
     "SLIDE:0": ((320, 0), (64, 64)),
     "SLIDE:1": ((384, 0), (64, 64)),
+    "JUMPSQUAT:0": ((448, 0), (64, 64)),
+    "JUMPSQUAT:1": ((512, 0), (64, 64)),
+    "RISING": ((576, 0), (64, 64)),
+    "AIR": ((640, 0), (64, 64)),
+    "FALLING": ((704, 0), (64, 64)),
+    "LAND": ((768, 0), (64, 64)),
 }
 
 sprites = load_spritesheet('img/player.png', sheet_data, colorkey=(1, 255, 1))
