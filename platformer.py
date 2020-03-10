@@ -76,7 +76,7 @@ G = {
     LANDF:2,JSQUATF:2,
     
     SPEED:10,TRACTION:2,DRIFT:2,
-    JMPSPEED:-24,GRAV:2,AIR:16,
+    JMPSPEED:-24,GRAV:2,AIR:12,
     
     FA: '-f' not in sys.argv,
 }
@@ -128,11 +128,24 @@ def drawn(G=G):
 def player_state_machine(G=G):
     G[Y_VEL] += G[GRAV]
     G[FRAME] += 1
+    if G[STATE] == "SLIDE":
+        if G[X_VEL] == 0:
+            G[STATE] = "IDLE"
+            G[FRAME] = 0
+        elif G[X_VEL] < 5: G[FRAME] = 1
+        else: G[FRAME] = 0
+
+    if G[STATE] == "LAND":
+        if G[FRAME] == G[LANDF]:
+            G[STATE] = "IDLE"
+            G[FRAME] = 0
+
     if G[STATE] == "IDLE":
         if G[MOV]:
             G[DIR] = G[MOV]
             G[STATE] = "RUN"
             G[FRAME] = 0
+        elif G[X_VEL]: G[STATE] = "SLIDE"
     
     if G[STATE] == "RUN":
         G[FRAME] = G[FRAME] % 30
@@ -144,13 +157,6 @@ def player_state_machine(G=G):
     elif G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING", "DIVE"]:
         if G[X_VEL] > 0: G[X_VEL] = max(G[X_VEL] - G[TRACTION], 0)
         else: G[X_VEL] = min(G[X_VEL] + G[TRACTION], 0)
-        
-    if G[STATE] == "SLIDE":
-        if G[X_VEL] == 0:
-            G[STATE] = "IDLE"
-            G[FRAME] = 0
-        elif G[X_VEL] < 5: G[FRAME] = 1
-        else: G[FRAME] = 0
         
     if G[JMP] and G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING", "DIVE"]:
         G[STATE] = "JUMPSQUAT"
@@ -175,11 +181,6 @@ def player_state_machine(G=G):
         G[STATE] = "FALLING"
         G[FRAME] = 0
 
-    if G[STATE] == "LAND":
-        if G[FRAME] == G[LANDF]:
-            G[STATE] = "IDLE"
-            G[FRAME] = 0
-
     G[JMP] = 0
 
 def hit_detection(G=G):
@@ -203,23 +204,33 @@ def hit_detection(G=G):
             G[X_VEL] += 1 if G[X_VEL] < 0 else -1
             G[Y_VEL] += 1 if G[Y_VEL] < 0 else -1
 
-def advance_frame(input_get, G=G):
+
+BTNS = {
+    'btn1': K_z,
+    'btn2': K_x,
+    'l': K_LEFT,
+    'u': K_UP,
+    'r': K_RIGHT,
+    'd': K_DOWN,
+}
+
+def advance_frame(input_get, BTNS=BTNS, G=G):
     CLOCK.tick(30)
     adjust_scroller()
     frame_advance = G[FA]
     for e in input_get():
         if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE: quit()
         if e.type == KEYDOWN:
-            if e.key == K_RIGHT: G[MOV] = min(G[MOV] + 1, 1)
-            if e.key == K_LEFT: G[MOV] = max(G[MOV] - 1, -1)
-            if e.key == K_SPACE: G[JMP] += 1
+            if e.key == BTNS['r']: G[MOV] = min(G[MOV] + 1, 1)
+            if e.key == BTNS['l']: G[MOV] = max(G[MOV] - 1, -1)
+            if e.key == BTNS['btn1']: G[JMP] += 1
 
             if e.key == K_d and "-d" in sys.argv: G[FA] = not G[FA]
             if e.key == K_n: frame_advance = True
 
         if e.type == KEYUP:
-            if e.key == K_RIGHT: G[MOV] -= 1
-            if e.key == K_LEFT: G[MOV] -= -1
+            if e.key == BTNS['r']: G[MOV] -= 1
+            if e.key == BTNS['l']: G[MOV] -= -1
 
     
     #state machine -> hit detection -> move
