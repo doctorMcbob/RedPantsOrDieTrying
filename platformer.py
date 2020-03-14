@@ -11,6 +11,9 @@ taking it slow
 
 platforms [(x, y, w, h, idx)]
 
+---- Notes
+Edgecancel dive baby
+
 """
 import pygame
 from pygame.locals import *
@@ -26,8 +29,8 @@ W="W";H="H";X="X";Y="Y";STATE="STATE";MOV="MOV";JMP="JMP";SPEED="SPEED"
 DIR="DIR";TRACTION="TRACTION";X_VEL="X_VEL";Y_VEL="Y_VEL";JMPSPEED="JMPSPEED"
 GRAV="GRAV";PLATS="PLATS";ENEMIES="ENEMIES";SPIKES="SPIKES";LVL="LVL"
 AIR="AIR";DRIFT="DRIFT";FRAME="FRAME";LANDF="LANDF";JSQUATF="JSQUATF"
-SCROLL="SCROLL";DIVE="DIVE";DSTARTF="DSTARTF"
-FA="FA"
+SCROLL="SCROLL";DIVE="DIVE";DIVESTR="DIVESTR";DSTARTF="DSTARTF";
+DIVELJSTR="DIVELJSTR";BONKLF="BONKLF";FA="FA"
 
 G = {
     W:960,H:480,
@@ -37,8 +40,8 @@ G = {
     STATE:"IDLE",DIR:1,MOV:0,JMP:0,DIVE:0,
 
     FRAME:0,
-    LANDF:2,JSQUATF:2,
-    DSTARTF:3,
+    LANDF:2,JSQUATF:2,BONKLF:5,
+    DSTARTF:3,DIVESTR:20,DIVELJSTR:-12,
     
     SPEED:10,TRACTION:2,DRIFT:2,
     JMPSPEED:-24,GRAV:2,AIR:12,
@@ -131,7 +134,9 @@ def player_state_machine(G=G):
         else: G[X_VEL] = min(G[X_VEL] + G[TRACTION], 0)
 
     # jump
-    if G[JMP] and G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING", "DIVE"]:
+    if G[JMP] and G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING",
+                                   "DIVE", "DIVESTART", "DIVELAND", "DIVELANDJUMP",
+                                   "BONK"]:
         G[STATE] = "JUMPSQUAT"
         G[FRAME] = 0
 
@@ -139,7 +144,7 @@ def player_state_machine(G=G):
         G[Y_VEL] += G[JMPSPEED]
 
     # jump states
-    if not G[STATE] in [ "DIVE", "BONK"]:
+    if not G[STATE] in [ "DIVE", "DIVELANDJUMP", "BONK"]:
         if abs(G[Y_VEL]) > G[GRAV]:
             G[STATE] = "AIR"
             G[FRAME] = 0
@@ -148,28 +153,43 @@ def player_state_machine(G=G):
             G[STATE] = "RISING"
             G[FRAME] = 0
 
-        if G[STATE] == "AIR" and G[MOV]:
-            if abs(G[X_VEL] + G[DRIFT] * G[MOV]) <= G[SPEED]: G[X_VEL] += G[DRIFT] * G[MOV]
-            if G[X_VEL]: G[DIR] = G[MOV]
-
         if G[Y_VEL] > G[AIR]:
             G[STATE] = "FALLING"
             G[FRAME] = 0
+
+    if (G[STATE] == "AIR" and G[MOV]) or G[STATE] == "DIVELANDJUMP":
+        if abs(G[X_VEL] + G[DRIFT] * G[MOV]) <= G[SPEED]: G[X_VEL] += G[DRIFT] * G[MOV]
+        if G[X_VEL]: G[DIR] = G[MOV]
 
     # dive
     if G[STATE] == "AIR" and G[DIVE]:
         G[STATE] = "DIVESTART"
         G[FRAME] = 0
 
-    
     if G[STATE] == "DIVESTART":
         G[Y_VEL] = 0
         if G[FRAME] > G[DSTARTF]:
             G[STATE] = "DIVE"
             G[FRAME] = 0
-            G[X_VEL] = 20 * G[DIR]
+            G[X_VEL] = G[DIVESTR] * G[DIR]
 
+    if G[STATE] == "DIVELAND":
+        if G[X_VEL] == 0:
+            G[STATE] = "IDLE"
+            G[FRAME] = 0
 
+        if G[JMP]:
+            G[Y_VEL] = G[DIVELJSTR]
+            G[STATE] = "DIVELANDJUMP"
+            G[FRAME] = 0
+    
+    if G[STATE] == "BONK" and G[FRAME] == 1:
+        G[X_VEL] = -10 * G[DIR]
+
+    if G[STATE] == "BONKLAND" and G[FRAME] >= G[BONKLF]:
+        G[STATE] = "IDLE"
+        G[FRAME] = 0
+    
     G[DIVE] = 0
     G[JMP] = 0
 
@@ -192,11 +212,11 @@ def hit_detection(G=G):
             G[Y_VEL] += 1 if G[Y_VEL] < 0 else -1
         if yflag and not G[Y_VEL]:
             # i dont love changing the state here but it seems fine
-            if G[STATE] in ["FALLING", "AIR"]:
+            if G[STATE] in ["FALLING", "AIR", "DIVELANDJUMP"]:
                 G[STATE] = "LAND"
                 G[FRAME] = 0
-            if G[STATE] == "DIVE":
-                G[STATE] = "DIVELAND"
+            if G[STATE] in ["DIVE", "BONK"]:
+                G[STATE] = G[STATE] + "LAND"
                 G[FRAME] = 0
 
     if G[X_VEL] and G[Y_VEL]:
