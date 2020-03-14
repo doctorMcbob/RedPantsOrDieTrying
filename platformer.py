@@ -166,7 +166,6 @@ def player_state_machine(G=G):
         G[STATE] = "DIVESTART"
         G[FRAME] = 0
 
-    print(G[DIR])
     if G[STATE] == "DIVESTART":
         G[Y_VEL] = 0
         if G[FRAME] > G[DSTARTF]:
