@@ -3,7 +3,7 @@ from pygame.locals import *
 from pygame import Surface
 
 def load_spritesheet(filename, data, colorkey=None):
-    """data should be dict with key: ((x, y), (w, h)), assumes w, h are 32, 32"""
+    """data should be dict with key: ((x, y), (w, h))"""
     surf = pygame.image.load(filename).convert()
     sheet = {}
     for name in data:

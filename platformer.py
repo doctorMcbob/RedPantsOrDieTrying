@@ -11,42 +11,6 @@ taking it slow
 
 platforms [(x, y, w, h, idx)]
 
-ideas:
-   initial dash for running?
-
-TODO LIST: {x:done,/:working on,.:started,?:thinking,}  
---------------------------
-Pixel Art:
-    [/] player
-       [x] IDLE
-       [] CROUCH
-       [x] RUN
-       [x] SLIDE
-       [x] JUMPSQUAT
-       [x] RISING
-       [x] AIR
-       [x] FALLING
-       [x] LANDING
-       [] FASTFALLING
-       [] DIVE
-       [] DIVELAND
-    [] walls
-    [] spikes
-    [] enemies
-    [] backgrounds
-Programming:
-    [/] architecture
-    [/] player movement
-       [x] left right
-       [x] jump
-       [] fastfall
-       [] dive
-       [x] gravity
-       [x] platform hit detection
-    [x] platforms
-    [] spikes
-    [] enemies
-    [] backgrounds
 """
 import pygame
 from pygame.locals import *
@@ -62,7 +26,7 @@ W="W";H="H";X="X";Y="Y";STATE="STATE";MOV="MOV";JMP="JMP";SPEED="SPEED"
 DIR="DIR";TRACTION="TRACTION";X_VEL="X_VEL";Y_VEL="Y_VEL";JMPSPEED="JMPSPEED"
 GRAV="GRAV";PLATS="PLATS";ENEMIES="ENEMIES";SPIKES="SPIKES";LVL="LVL"
 AIR="AIR";DRIFT="DRIFT";FRAME="FRAME";LANDF="LANDF";JSQUATF="JSQUATF"
-SCROLL="SCROLL"
+SCROLL="SCROLL";DIVE="DIVE";DSTARTF="DSTARTF"
 FA="FA"
 
 G = {
@@ -70,10 +34,11 @@ G = {
     X:0,Y:0,
     SCROLL:[0, 0],
     X_VEL:0,Y_VEL:0,
-    STATE:"IDLE",DIR:1,MOV:0,JMP:0,
+    STATE:"IDLE",DIR:1,MOV:0,JMP:0,DIVE:0,
 
     FRAME:0,
     LANDF:2,JSQUATF:2,
+    DSTARTF:3,
     
     SPEED:10,TRACTION:2,DRIFT:2,
     JMPSPEED:-24,GRAV:2,AIR:12,
@@ -108,7 +73,12 @@ def drawn_player(G=G): #placeholder untill i have pixel art
     while f>=0:
         if G[STATE]+":"+str(f) in sprites: return sprites[G[STATE]+":"+str(f)]
         f -= 1
-    raise IndexError("no sprite found for player "+G[STATE])
+    draft = Surface((64, 64))
+    draft.fill((0, 255, 0))
+    draft.blit(HEL16.render(G[STATE], 0, (0, 0, 0)), (0, 0))
+    return draft
+    
+    #raise IndexError("no sprite found for player "+G[STATE])
 
 def drawn_platform(plat):
     surf = Surface((plat[2], plat[3]))
@@ -128,6 +98,7 @@ def drawn(G=G):
 def player_state_machine(G=G):
     G[Y_VEL] += G[GRAV]
     G[FRAME] += 1
+    
     if G[STATE] == "SLIDE":
         if G[X_VEL] == 0:
             G[STATE] = "IDLE"
@@ -153,34 +124,53 @@ def player_state_machine(G=G):
         if G[MOV] != G[DIR]:
             G[STATE] = "SLIDE"
             G[FRAME] = 0
-            
+
+    # apply traction  
     elif G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING", "DIVE"]:
         if G[X_VEL] > 0: G[X_VEL] = max(G[X_VEL] - G[TRACTION], 0)
         else: G[X_VEL] = min(G[X_VEL] + G[TRACTION], 0)
-        
+
+    # jump
     if G[JMP] and G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING", "DIVE"]:
         G[STATE] = "JUMPSQUAT"
         G[FRAME] = 0
-    
+
     if G[STATE] == "JUMPSQUAT" and G[FRAME] >= G[JSQUATF]:
         G[Y_VEL] += G[JMPSPEED]
 
-    if abs(G[Y_VEL]) > G[GRAV]:
-        G[STATE] = "AIR"
-        G[FRAME] = 0
+    # jump states
+    if not G[STATE] in [ "DIVE", "BONK"]:
+        if abs(G[Y_VEL]) > G[GRAV]:
+            G[STATE] = "AIR"
+            G[FRAME] = 0
         
-    if G[Y_VEL] < -G[AIR]: 
-        G[STATE] = "RISING"
+        if G[Y_VEL] < -G[AIR]: 
+            G[STATE] = "RISING"
+            G[FRAME] = 0
+
+        if G[STATE] == "AIR" and G[MOV]:
+            if abs(G[X_VEL] + G[DRIFT] * G[MOV]) <= G[SPEED]: G[X_VEL] += G[DRIFT] * G[MOV]
+            if G[X_VEL]: G[DIR] = G[MOV]
+
+        if G[Y_VEL] > G[AIR]:
+            G[STATE] = "FALLING"
+            G[FRAME] = 0
+
+    # dive
+    if G[STATE] == "AIR" and G[DIVE]:
+        G[STATE] = "DIVESTART"
         G[FRAME] = 0
 
-    if G[STATE] == "AIR" and G[MOV]:
-        if abs(G[X_VEL] + G[DRIFT] * G[MOV]) <= G[SPEED]: G[X_VEL] += G[DRIFT] * G[MOV]
-        if G[X_VEL]: G[DIR] = G[MOV]
+    
+    if G[STATE] == "DIVESTART":
+        G[Y_VEL] = 0
+        if G[FRAME] > G[DSTARTF]:
+            G[STATE] = "DIVE"
+            G[FRAME] = 0
+            G[X_VEL] = 20 * G[DIR]
 
-    if G[Y_VEL] > G[AIR]:
-        G[STATE] = "FALLING"
-        G[FRAME] = 0
 
+    G[DIVE] = 0
     G[JMP] = 0
 
 def hit_detection(G=G):
@@ -188,17 +178,27 @@ def hit_detection(G=G):
     plats = [Rect((x, y), (w, h)) for x, y, w, h, idx in G[LVL][PLATS]]
     hitbox = Rect((G[X]+16, G[Y]), (32, 64))
     if G[X_VEL]:
+        xflag = abs(G[X_VEL]) > 0
         while hitbox.move(G[X_VEL], 0).collidelist(plats) != -1:
             G[X_VEL] += 1 if G[X_VEL] < 0 else -1
+        if xflag and not G[X_VEL]:
+            if G[STATE] in ["DIVE", "DIVELANDJUMP"]:
+                G[STATE] = "BONK"
+                G[FRAME] = 0
+
     if G[Y_VEL]:
-        flag = G[Y_VEL] > 0
+        yflag = G[Y_VEL] > 0
         while hitbox.move(0, G[Y_VEL]).collidelist(plats) != -1:
             G[Y_VEL] += 1 if G[Y_VEL] < 0 else -1
-        if flag and not G[Y_VEL]:
+        if yflag and not G[Y_VEL]:
             # i dont love changing the state here but it seems fine
             if G[STATE] in ["FALLING", "AIR"]:
                 G[STATE] = "LAND"
                 G[FRAME] = 0
+            if G[STATE] == "DIVE":
+                G[STATE] = "DIVELAND"
+                G[FRAME] = 0
+
     if G[X_VEL] and G[Y_VEL]:
         while hitbox.move(G[X_VEL], G[Y_VEL]).collidelist(plats) != -1:
             G[X_VEL] += 1 if G[X_VEL] < 0 else -1
@@ -224,6 +224,7 @@ def advance_frame(input_get, BTNS=BTNS, G=G):
             if e.key == BTNS['r']: G[MOV] = min(G[MOV] + 1, 1)
             if e.key == BTNS['l']: G[MOV] = max(G[MOV] - 1, -1)
             if e.key == BTNS['btn1']: G[JMP] += 1
+            if e.key == BTNS['btn2']: G[DIVE] += 1
 
             if e.key == K_d and "-d" in sys.argv: G[FA] = not G[FA]
             if e.key == K_n: frame_advance = True
