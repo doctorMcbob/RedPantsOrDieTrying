@@ -159,13 +159,14 @@ def player_state_machine(G=G):
 
     if (G[STATE] == "AIR" and G[MOV]) or G[STATE] == "DIVELANDJUMP":
         if abs(G[X_VEL] + G[DRIFT] * G[MOV]) <= G[SPEED]: G[X_VEL] += G[DRIFT] * G[MOV]
-        if G[X_VEL]: G[DIR] = G[MOV]
+        if G[X_VEL]: G[DIR] = G[MOV] if G[MOV] else G[DIR]
 
     # dive
     if G[STATE] == "AIR" and G[DIVE]:
         G[STATE] = "DIVESTART"
         G[FRAME] = 0
 
+    print(G[DIR])
     if G[STATE] == "DIVESTART":
         G[Y_VEL] = 0
         if G[FRAME] > G[DSTARTF]:
