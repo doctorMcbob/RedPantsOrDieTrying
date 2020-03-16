@@ -33,7 +33,7 @@ SCROLL="SCROLL";DIVE="DIVE";DIVESTR="DIVESTR";DSTARTF="DSTARTF";
 DIVELJSTR="DIVELJSTR";BONKLF="BONKLF";FA="FA"
 
 G = {
-    W:960,H:480,
+    W:960,H:640,
     X:0,Y:0,
     SCROLL:[0, 0],
     X_VEL:0,Y_VEL:0,
@@ -55,8 +55,11 @@ def adjust_scroller():
     G[SCROLL][1] = 0 - G[Y] + (G[H]/2) - 32
 
 DEMO = {
-    PLATS:[(-G[W], 400, G[W]*3, 96, 2), (420, 336, 126, 64, 1), (612, 400-126, 64, 126, 1),
-           (420-(64*3), 336-126, 64, 64, 1), (420-(64*6), 336-126-64, 126, 64, 1)],
+    PLATS:[
+        (-G[W], 400, G[W]*3, 96, 2), (420, 336, 126, 64, 1), (612, 400-126, 64, 126, 1),
+        (420-(64*3), 336-126, 64, 64, 1), (420-(64*6), 336-126-64, 126, 64, 1),
+        (-448, 116, 180, 64, 3),
+    ],
     ENEMIES:[],
     SPIKES:[],
 }
@@ -111,7 +114,7 @@ def player_state_machine(G=G):
 
     if G[STATE] == "LAND":
         if G[FRAME] == G[LANDF]:
-            G[STATE] = "IDLE"
+            G[STATE] = "IDLE" if G[MOV] * G[X_VEL] >= 0 else "SLIDE"
             G[FRAME] = 0
 
     if G[STATE] == "IDLE":
@@ -129,7 +132,7 @@ def player_state_machine(G=G):
             G[FRAME] = 0
 
     # apply traction  
-    elif G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING", "DIVE"]:
+    elif G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING", "DIVE", "DIVELANDJUMP"]:
         if G[X_VEL] > 0: G[X_VEL] = max(G[X_VEL] - G[TRACTION], 0)
         else: G[X_VEL] = min(G[X_VEL] + G[TRACTION], 0)
 
