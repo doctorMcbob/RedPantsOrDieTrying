@@ -71,9 +71,9 @@ pygame.display.set_caption("lookin good")
 CLOCK = pygame.time.Clock()
 HEL16 = pygame.font.SysFont("Helvetica", 16)
 
-from data import sprites
+from data import sprites, hitbox_data
 
-def drawn_player(G=G): #placeholder untill i have pixel art
+def drawn_player(G=G):
     if G[STATE] in sprites: return sprites[G[STATE]]
     f = G[FRAME]
     while f>=0:
@@ -160,7 +160,7 @@ def player_state_machine(G=G):
             G[STATE] = "FALLING"
             G[FRAME] = 0
 
-    if (G[STATE] == "AIR" and G[MOV]) or G[STATE] == "DIVELANDJUMP":
+    if G[STATE] in ["AIR", "DIVELANDJUMP"]:
         if abs(G[X_VEL] + G[DRIFT] * G[MOV]) <= G[SPEED]: G[X_VEL] += G[DRIFT] * G[MOV]
         if G[X_VEL]: G[DIR] = G[MOV] if G[MOV] else G[DIR]
 
@@ -199,7 +199,8 @@ def player_state_machine(G=G):
 def hit_detection(G=G):
     #platform hit detection
     plats = [Rect((x, y), (w, h)) for x, y, w, h, idx in G[LVL][PLATS]]
-    hitbox = Rect((G[X]+16, G[Y]), (32, 64))
+    off, box = hitbox_data[G[STATE]]
+    hitbox = Rect((G[X]+off[0], G[Y]+off[1]), box)
     if G[X_VEL]:
         xflag = abs(G[X_VEL]) > 0
         while hitbox.move(G[X_VEL], 0).collidelist(plats) != -1:
