@@ -36,7 +36,7 @@ Yes! I'm pretty good with python. Please email me at wootenwesley@gmail.com
 	- alter values if desired
 
 ## Boot up
-`python boot {options}`
+`python boot.py {options}`
 
 ### Options
 - `-d`: Enable debug mode. This allows frame-by-frame debug pausing.
