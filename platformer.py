@@ -33,7 +33,7 @@ SCROLL="SCROLL";DIVE="DIVE";DIVESTR="DIVESTR";DSTARTF="DSTARTF";
 DIVELJSTR="DIVELJSTR";BONKLF="BONKLF";FA="FA"
 
 G = {
-    W:960,H:640,
+    W:960,H:480,
     X:0,Y:0,
     SCROLL:[0, 0],
     X_VEL:0,Y_VEL:0,
@@ -55,11 +55,8 @@ def adjust_scroller():
     G[SCROLL][1] = 0 - G[Y] + (G[H]/2) - 32
 
 DEMO = {
-    PLATS:[
-        (-G[W], 400, G[W]*3, 96, 2), (420, 336, 126, 64, 1), (612, 400-126, 64, 126, 1),
-        (420-(64*3), 336-126, 64, 64, 1), (420-(64*6), 336-126-64, 126, 64, 1),
-        (-448, 116, 180, 64, 3),
-    ],
+    PLATS:[(-G[W], 400, G[W]*3, 96, 2), (420, 336, 126, 64, 1), (612, 400-126, 64, 126, 1),
+           (420-(64*3), 336-126, 64, 64, 1), (420-(64*6), 336-126-64, 126, 64, 1)],
     ENEMIES:[],
     SPIKES:[],
 }
@@ -71,9 +68,9 @@ pygame.display.set_caption("lookin good")
 CLOCK = pygame.time.Clock()
 HEL16 = pygame.font.SysFont("Helvetica", 16)
 
-from data import sprites, hitbox_data
+from data import sprites
 
-def drawn_player(G=G):
+def drawn_player(G=G): #placeholder untill i have pixel art
     if G[STATE] in sprites: return sprites[G[STATE]]
     f = G[FRAME]
     while f>=0:
@@ -114,7 +111,7 @@ def player_state_machine(G=G):
 
     if G[STATE] == "LAND":
         if G[FRAME] == G[LANDF]:
-            G[STATE] = "IDLE" if G[MOV] * G[X_VEL] >= 0 else "SLIDE"
+            G[STATE] = "IDLE"
             G[FRAME] = 0
 
     if G[STATE] == "IDLE":
@@ -132,7 +129,7 @@ def player_state_machine(G=G):
             G[FRAME] = 0
 
     # apply traction  
-    elif G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING", "DIVE", "DIVELANDJUMP"]:
+    elif G[STATE] not in ["RISING", "AIR", "FALLING", "FASTFALLING", "DIVE"]:
         if G[X_VEL] > 0: G[X_VEL] = max(G[X_VEL] - G[TRACTION], 0)
         else: G[X_VEL] = min(G[X_VEL] + G[TRACTION], 0)
 
@@ -160,7 +157,7 @@ def player_state_machine(G=G):
             G[STATE] = "FALLING"
             G[FRAME] = 0
 
-    if G[STATE] in ["AIR", "DIVELANDJUMP"]:
+    if (G[STATE] == "AIR" and G[MOV]) or G[STATE] == "DIVELANDJUMP":
         if abs(G[X_VEL] + G[DRIFT] * G[MOV]) <= G[SPEED]: G[X_VEL] += G[DRIFT] * G[MOV]
         if G[X_VEL]: G[DIR] = G[MOV] if G[MOV] else G[DIR]
 
@@ -199,8 +196,7 @@ def player_state_machine(G=G):
 def hit_detection(G=G):
     #platform hit detection
     plats = [Rect((x, y), (w, h)) for x, y, w, h, idx in G[LVL][PLATS]]
-    off, box = hitbox_data[G[STATE]]
-    hitbox = Rect((G[X]+off[0], G[Y]+off[1]), box)
+    hitbox = Rect((G[X]+16, G[Y]), (32, 64))
     if G[X_VEL]:
         xflag = abs(G[X_VEL]) > 0
         while hitbox.move(G[X_VEL], 0).collidelist(plats) != -1:
