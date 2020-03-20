@@ -28,6 +28,8 @@ Yes! I'm pretty good with python. Please email me at wootenwesley@gmail.com
 	- https://github.com/SublimeLinter/SublimeLinter-pylint
 	- https://code.visualstudio.com/docs/python/linting
 	- https://atom.io/packages/linter-pylint
+	- https://docs.pylint.org/en/1.6.0/ide-integration.html
+		- https://code.litomisky.com/2014/10/24/getting-with-pylint-in-emacs/
 - `cp .pylintrc.example .pylintrc`
 	- fill in required values
 - `cp .env.sample .env`
