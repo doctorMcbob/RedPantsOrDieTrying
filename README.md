@@ -37,5 +37,5 @@ Yes! I'm pretty good with python. Please email me at wootenwesley@gmail.com
 `python boot {options}`
 
 ### Options
-`-d`: Enable debug mode. This allows frame-by-frame debug pausing.
-`-f`: Start game in fame-by-frame freeze frame state. Must also have `-d`
+- `-d`: Enable debug mode. This allows frame-by-frame debug pausing.
+- `-f`: Start game in fame-by-frame freeze frame state. Must also have `-d`
