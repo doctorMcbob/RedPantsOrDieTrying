@@ -17,7 +17,7 @@ def apply_slide_state(state):
 
 def apply_land_state(state):
     if state[const.FRAME] == state[const.LANDING_FRAME]:
-        state[const.STATE] = const.IDLE
+        state[const.STATE] = const.IDLE if state[const.MOVE] * state[const.VELOCITY] >= 0 else const.SLIDE
         state[const.FRAME] = 0
 
 def apply_idle_state(state):
@@ -56,7 +56,7 @@ def update_motion_state(state):
     if motion_state_handler:
         motion_state_handler(state)
 
-TRACTION_STATE_BLACKLIST = [const.RISING, const.AIR, const.FALLING, const.FASTFALLING, const.DIVE]
+TRACTION_STATE_BLACKLIST = [const.RISING, const.AIR, const.FALLING, const.FASTFALLING, const.DIVE, const.DIVELANDJUMP]
 
 def update_traction_state(state):
     player_motion_state = state[const.STATE]
