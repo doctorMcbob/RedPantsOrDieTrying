@@ -80,3 +80,4 @@ class GameConstants(Enum):
     BONK = "BONK"
     JUMPSQUAT = "JUMPSQUAT"
     BONKLAND = "BONKLAND"
+    HITBOX = "HITBOX"

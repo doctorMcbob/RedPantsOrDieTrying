@@ -1,6 +1,7 @@
 from pygame import Surface
 from const import GameConstants as const
 
+
 def update_movement_velocity(state):
     state[const.X_COORD] += state[const.VELOCITY]
     state[const.Y_COORD] += state[const.VERTICAL_VELOCITY]
@@ -152,7 +153,23 @@ def reset_jump_and_dive_flags(state):
     state[const.DIVE] = 0
     state[const.JUMP] = 0
 
+HITBOX_STATE_DATA = {
+    const.DIVE: ((0, 0), (64, 64)),
+    const.DIVELAND: ((0, 32), (64, 32)),
+    const.DIVELANDJUMP: ((0, 0), (64, 64))
+}
+
+for s in [const.IDLE, const.RUN, const.SLIDE, const.JUMPSQUAT,
+          const.RISING, const.LAND, const.BONK, const.BONKLAND,
+          const.FALLING, const.AIR, const.DIVESTART]:
+    HITBOX_STATE_DATA[s] = ((16, 0), (32, 64))
+
+
+def update_hitbox(state):
+    state[const.HITBOX] = HITBOX_STATE_DATA[state[const.STATE]]
+
 def apply_state(state):
+    update_hitbox(state)
     update_movement_velocity(state)
     update_motion_state(state)
     update_traction_state(state)
