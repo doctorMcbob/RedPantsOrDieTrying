@@ -1,7 +1,6 @@
 from pygame import Surface
 from const import GameConstants as const
 
-
 def update_movement_velocity(state):
     state[const.X_COORD] += state[const.VELOCITY]
     state[const.Y_COORD] += state[const.VERTICAL_VELOCITY]
@@ -138,8 +137,8 @@ def update_dive_state(state):
             state[const.FRAME] = 0
 
 def update_bonk_state(state):
-    is_bonking = state[const.STATE] == const.BONK and state[const.FRAME] == 1
-
+    is_bonking = state[const.STATE] == const.BONK and state[const.FRAME] <= 1
+        
     if is_bonking:
         state[const.VELOCITY] = -10 * state[const.DIRECTION]
 

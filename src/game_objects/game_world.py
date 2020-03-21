@@ -48,6 +48,7 @@ def get_surface(state, player_one_surface):
 
 def apply_collision_detection(state):
     #platform hit detection
+    # re rewite this when refactoring playor object
 
     # gather hitboxes
     plats = [Rect((x, y), (w, h)) for x, y, w, h, idx in state[const.LEVEL][const.PLATFORMS]]
@@ -73,7 +74,6 @@ def apply_collision_detection(state):
                 state[const.STATE] = const.BONK
                 state[const.FRAME] = 0
 
-    
     # Y axis
     if state[const.VERTICAL_VELOCITY]:
         yflag = state[const.VERTICAL_VELOCITY] > 0
@@ -81,9 +81,9 @@ def apply_collision_detection(state):
         while hitbox.move(0, state[const.VERTICAL_VELOCITY]).collidelist(plats) != -1:
             state[const.VERTICAL_VELOCITY] += direction
 
-        if brokeflag:
+        if brokeflag and state[const.VERTICAL_VELOCITY]:
             state[const.Y_COORD] += state[const.VERTICAL_VELOCITY]
-            state[const.VERTICAL_VELOCITY] = 0
+            state[const.VERTICAL_VELOCITY] = 1
             hitbox = Rect((state[const.X_COORD]+pos[0], state[const.Y_COORD]+pos[1]), box)
 
         if yflag and not state[const.VERTICAL_VELOCITY]:
