@@ -1,11 +1,5 @@
 from const import InputConstants as const
 
-from src.game_data_templates.input_config import (
-    INPUT_CONFIG_TEMPLATE,
-)
-
-INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
-
 def parse_input_event_type(player_input, input_config):
     """Determine if an input was a button press or a button release"""
     player_input_type = player_input.type
@@ -28,12 +22,9 @@ def parse_input_event_key(player_input, input_config):
 
     return False
 
-def parse_input(player_inputs):
+def parse_input(player_inputs, input_config):
     """Gather user inputs and check them against the input configuration"""
     parsed_inputs = []
-
-    # Get up-to-date input config (in case controls were changed mid game)
-    input_config = INPUT_CONFIG
 
     # Iterate through inputs and apply proper control behaviors if necessary
     for player_input in player_inputs:

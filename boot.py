@@ -34,9 +34,7 @@ from src.game import (
     main_loop,
 )
 
-from src.game_data_templates.game_state import (
-    GAME_STATE_TEMPLATE,
-)
+from src.game_data_templates.game_state import GAME_STATE_TEMPLATE
 
 UNINITIALIZED_GAME_STATE = GAME_STATE_TEMPLATE.copy()
 
