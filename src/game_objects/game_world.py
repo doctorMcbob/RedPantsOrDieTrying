@@ -87,7 +87,8 @@ def apply_collision_detection(state):
             hitbox = Rect((state[const.X_COORD]+pos[0], state[const.Y_COORD]+pos[1]), box)
 
         if yflag and not state[const.VERTICAL_VELOCITY]:
-            if state[const.STATE] in [const.FALLING, const.AIR, const.DIVELANDJUMP]:
+            if state[const.STATE] in [const.FALLING, const.AIR, const.DIVELANDJUMP,
+                                      const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2]:
                 state[const.STATE] = const.LAND
                 state[const.FRAME] = 0
 

@@ -56,7 +56,9 @@ def update_motion_state(state):
     if motion_state_handler:
         motion_state_handler(state)
 
-TRACTION_STATE_BLACKLIST = [const.RISING, const.AIR, const.FALLING, const.FASTFALLING, const.DIVE, const.DIVELANDJUMP]
+TRACTION_STATE_BLACKLIST = [const.RISING, const.AIR, const.FALLING, const.FASTFALLING,
+                            const.DIVE, const.DIVELANDJUMP, const.KICKFLIP0,
+                            const.KICKFLIP1, const.KICKFLIP2]
 
 def update_traction_state(state):
     player_motion_state = state[const.STATE]
@@ -64,16 +66,35 @@ def update_traction_state(state):
     if player_motion_state not in TRACTION_STATE_BLACKLIST:
         apply_traction_state(state)
 
-MID_AIR_MOTION_STATE_WHITELIST = [
+JUMPSQUAT_BLACKLIST = [
     const.RISING, const.AIR, const.FALLING,
     const.FASTFALLING, const.DIVE, const.DIVESTART,
     const.DIVELAND, const.DIVELANDJUMP, const.BONK,
+    const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2,
 ]
 
-JUMP_START_MOTION_STATE_BLACKLIST = [const.DIVE, const.DIVELANDJUMP, const.BONK]
+JUMP_START_MOTION_STATE_BLACKLIST = [const.DIVE, const.DIVELANDJUMP, const.BONK,
+                                     const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2]
+
+def update_kickflip_state(state):
+    if state[const.STATE] == const.SLIDE and state[const.JUMP] and state[const.MOVE] != state[const.DIRECTION]:
+        state[const.STATE] = const.KICKFLIP0
+        state[const.FRAME] = 0
+
+        state[const.VERTICAL_VELOCITY] = state[const.KICKFLIPSTR]
+        state[const.DIRECTION] *= -1
+        state[const.VELOCITY] = state[const.DIRECTION] * 5
+
+    if state[const.STATE] == const.KICKFLIP0 and state[const.VERTICAL_VELOCITY] >= state[const.KICKFLIPLIMIT]:
+        state[const.STATE] = const.KICKFLIP1
+        state[const.FRAME] = 0
+
+    if state[const.STATE] in [const.KICKFLIP0, const.KICKFLIP1] and state[const.VERTICAL_VELOCITY] > 0:
+        state[const.STATE] = const.KICKFLIP2
+        state[const.FRAME] = 0
 
 def update_jump_state(state):
-    is_starting_squat = state[const.JUMP] and state[const.STATE] not in MID_AIR_MOTION_STATE_WHITELIST
+    is_starting_squat = state[const.JUMP] and state[const.STATE] not in JUMPSQUAT_BLACKLIST
 
     if is_starting_squat:
         state[const.STATE] = const.JUMPSQUAT
@@ -85,7 +106,7 @@ def update_jump_state(state):
         state[const.VERTICAL_VELOCITY] += state[const.JUMP_SPEED]
 
     is_jumping = state[const.STATE] not in JUMP_START_MOTION_STATE_BLACKLIST
-
+    
     if is_jumping:
         if abs(state[const.VERTICAL_VELOCITY]) > state[const.GRAVITY]:
             state[const.STATE] = const.AIR
@@ -100,7 +121,7 @@ def update_jump_state(state):
             state[const.FRAME] = 0
 
 def update_falling_state(state):
-    is_falling = state[const.STATE] == const.AIR and state[const.MOVE] or state[const.MOVE] == const.DIVELANDJUMP
+    is_falling = state[const.STATE] == const.AIR and state[const.MOVE]
 
     if is_falling:
         if abs(state[const.VELOCITY] + state[const.DRIFT] * state[const.MOVE]) <= state[const.SPEED]:
@@ -108,6 +129,13 @@ def update_falling_state(state):
         if state[const.VELOCITY]:
             state[const.DIRECTION] = state[const.MOVE] if state[const.MOVE] else state[const.DIRECTION]
 
+    is_flipping = state[const.STATE] in [const.KICKFLIP1, const.KICKFLIP2]
+
+    if is_flipping:
+        if state[const.MOVE] == state[const.DIRECTION]:
+            if abs(state[const.VELOCITY] + state[const.DRIFT] * state[const.MOVE]) <= state[const.SPEED]:
+                state[const.VELOCITY] += state[const.DRIFT] * state[const.MOVE]
+            
 def update_dive_state(state):
     is_starting_dive = state[const.STATE] == const.AIR and state[const.DIVE]
 
@@ -152,11 +180,11 @@ def reset_jump_and_dive_flags(state):
     state[const.DIVE] = 0
     state[const.JUMP] = 0
 
-HITBOX_STATE_DATA = {
-    const.DIVE: ((0, 0), (64, 64)),
-    const.DIVELAND: ((0, 32), (64, 32)),
-    const.DIVELANDJUMP: ((0, 0), (64, 64))
-}
+HITBOX_STATE_DATA = {const.DIVELAND: ((0, 32), (64, 32))}
+
+for s in [const.DIVE, const.DIVELANDJUMP,
+          const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2]:
+    HITBOX_STATE_DATA[s] = ((0, 0), (64, 64))
 
 for s in [const.IDLE, const.RUN, const.SLIDE, const.JUMPSQUAT,
           const.RISING, const.LAND, const.BONK, const.BONKLAND,
@@ -173,6 +201,7 @@ def apply_state(state):
     update_motion_state(state)
     update_traction_state(state)
 
+    update_kickflip_state(state)
     update_jump_state(state)
     update_falling_state(state)
     update_dive_state(state)
@@ -180,7 +209,7 @@ def apply_state(state):
 
     reset_jump_and_dive_flags(state)
 
-def get_surface(state): #placeholder untill i have pixel art
+def get_surface(state):
     game_state_string = state[const.STATE].value
     sprites = state[const.SPRITE_SHEET]
 
