@@ -1,4 +1,4 @@
-from const import GameConstants as const
+from src.const import GameConstants as const
 
 PLAYER_STATE_TEMPLATE = {
     const.X_COORD: 0,

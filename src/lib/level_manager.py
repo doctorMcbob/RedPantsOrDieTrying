@@ -1,6 +1,6 @@
 from src.game_levels import development_playground
-from const import GameConstants as const
-from config import GAME_CONFIG as config
+from src.const import GameConstants as const
+from src.config import GAME_CONFIG as config
 
 LEVEL_MAP = {
     "development_playground": development_playground,

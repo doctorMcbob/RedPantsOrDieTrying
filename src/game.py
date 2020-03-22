@@ -1,4 +1,5 @@
 import pygame
+
 import src.lib.level_manager as level_manager
 
 from src.lib.input_manager.input_handlers import (
@@ -16,12 +17,14 @@ from src.game_data_templates.input_config import (
     INPUT_CONFIG_TEMPLATE,
 )
 
-from const import GameConstants as const
+from src.const import GameConstants as const
+from src.config import GAME_CONFIG as config
 
-PLAYER_ONE = Player(PLAYER_STATE_TEMPLATE)
+GAME_PLAYER_ONE = Player(PLAYER_STATE_TEMPLATE, config[const.PLAYER_ONE_SPRITE_SHEET])
 GAME_WORLD = GameWorld(GAME_WORLD_STATE_TEMPLATE)
-PLAYER_LIST = [PLAYER_ONE]
-SYSTEM_INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
+GAME_PLAYER_LIST = [GAME_PLAYER_ONE]
+GAME_OBJECT_LIST = [GAME_WORLD, GAME_PLAYER_ONE]
+GAME_SYSTEM_INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
 
 def init_game(game_state):
     # pylint: disable=no-member
@@ -41,33 +44,22 @@ def init_game(game_state):
 
     pygame.display.set_caption("lookin good")
 
-    PLAYER_ONE.initialize()
+    GAME_PLAYER_ONE.initialize()
 
     return game_state
-
-# @TODO move to src.lib.utils and refactor
-def print_game_state(game_state):
-    state_data = []
-
-    for key in game_state:
-        state_data.append((key, key.value))
-
-    state_data.sort(key=lambda x: x[1])
-    print("-" * 20)
-
-    for key_data in state_data:
-        print(key_data[1], game_state[key_data[0]])
 
 def draw_screen(game_state, game_world_surface):
     game_state[const.SCREEN].blit(game_world_surface, (0, 0))
     pygame.display.update()
 
 def update_player_states(game_state, game_world_state, raw_game_inputs):
-    for player_obj in PLAYER_LIST:
-        player_input_config = player_obj.get_state()["input_config"]
-        game_inputs = input_interpreter.parse_input(raw_game_inputs, player_input_config)
+    for player_obj in GAME_PLAYER_LIST:
+        player_obj.update_state(game_state, game_world_state, raw_game_inputs)
 
-        player_obj.update_state(game_state, game_world_state, game_inputs)
+def print_game_states(game_state):
+    utils.print_state(game_state)
+    for game_obj in GAME_OBJECT_LIST:
+        game_obj.print_state()
 
 def main_loop(game_state):
     while True:
@@ -78,7 +70,10 @@ def main_loop(game_state):
         raw_game_inputs = pygame.event.get()
 
         # Get parsed, usable player inputs
-        system_game_inputs = input_interpreter.parse_input(raw_game_inputs, SYSTEM_INPUT_CONFIG)
+        system_game_inputs = input_interpreter.parse_input(
+            raw_game_inputs,
+            GAME_SYSTEM_INPUT_CONFIG
+        )
 
         # Apply game related input mutations to game state
         if system_game_inputs:
@@ -90,19 +85,19 @@ def main_loop(game_state):
 
         if game_state[const.SHOULD_ADVANCE_FRAME]:
             # Advance to the next animation frame
-            PLAYER_ONE.get_state()[const.FRAME] += 1
+            GAME_PLAYER_ONE.get_state()[const.FRAME] += 1
 
             update_player_states(game_state, GAME_WORLD.get_state(), raw_game_inputs)
 
             # Apply latest state to the game world
-            GAME_WORLD.update_state(game_state, PLAYER_ONE)
+            GAME_WORLD.update_state(game_state, GAME_PLAYER_ONE)
 
             # Print game state every frame when in debug mode
             if game_state[const.IS_DEBUG_MODE_ACTIVE]:
-                print_game_state(game_state)
+                print_game_states(game_state)
 
             # Draw the screen with the most up to date game state
-            game_world_surface = GAME_WORLD.get_surface(game_state, PLAYER_ONE)
+            game_world_surface = GAME_WORLD.get_surface(game_state, GAME_PLAYER_ONE)
 
             # Render game world on screen
             draw_screen(game_state, game_world_surface)

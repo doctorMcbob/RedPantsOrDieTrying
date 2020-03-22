@@ -1,4 +1,4 @@
-from const import InputConstants as const
+from src.const import InputConstants as const
 
 def parse_input_event_type(player_input, input_config):
     """Determine if an input was a button press or a button release"""

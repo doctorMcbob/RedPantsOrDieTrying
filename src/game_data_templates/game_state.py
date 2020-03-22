@@ -1,8 +1,8 @@
 """Template for default game state dictionary"""
 import sys
 
-from const import GameConstants as const
-from config import GAME_CONFIG as config
+from src.const import GameConstants as const
+from src.config import GAME_CONFIG as config
 
 IS_DEBUG_MODE_ENABLED = "-d" in sys.argv
 
