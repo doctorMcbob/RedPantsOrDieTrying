@@ -21,7 +21,7 @@ from pygame.locals import (
 )
 # pylint: enable=no-name-in-module
 
-from const import InputConstants as const
+from src.const import InputConstants as const
 
 INPUT_CONFIG_TEMPLATE = {
     # Basic Controls
