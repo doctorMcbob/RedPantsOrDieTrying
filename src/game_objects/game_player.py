@@ -128,7 +128,7 @@ class GamePlayer(GameWorldEntity):
 
 
     def __update_kickflip_state(self):
-        if self.state[const.STATE] == const.SLIDE and self.state[const.JUMP] and self.state[const.MOVE] != self.state[const.DIRECTION]:
+        if self.state[const.STATE] == const.SLIDE and self.state[const.JUMP] and self.state[const.MOVE] == -1 * self.state[const.DIRECTION]:
             self.state[const.STATE] = const.KICKFLIP0
             self.state[const.FRAME] = 0
 
