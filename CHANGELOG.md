@@ -35,6 +35,11 @@ All notable changes to this project will be documented in this file.
 -   [[Dev-Platforming](https://github.com/doctorMcbob/RedPantsOrDieTrying/tree/Dev-Platforming) implementing platforming ideas
     -   Changed screen dimensions in .env.sample to (960, 640)
     -   Added Kickflip player states and sprites
+    -   Tweaked platformer constants.
+        -   raised gravity
+	-   strengthened jumps
+	-   increased speed
+	-   increased dive velocity
 
 ## 0.1.0 - 03/18/2020
 
