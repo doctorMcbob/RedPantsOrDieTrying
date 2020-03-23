@@ -11,10 +11,11 @@ from src.lib.sprite_manager.sprite_sheet import load_sprite_sheet
 
 # @TODO handle missing sprite key
 class GameWorldEntity(GameObject):
-    def __init__(self, state_template, sprite_key):
+    def __init__(self, state_template, sprite_key, hitbox_config):
         super(GameWorldEntity, self).__init__(state_template)
 
         self.state[const.SPRITE_SHEET_KEY] = sprite_key
+        self.state[const.HITBOX_CONFIG] = hitbox_config
         self.state[const.HITBOX] = False
 
     def initialize(self):
@@ -53,15 +54,31 @@ class GameWorldEntity(GameObject):
         self.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
         self.state[const.VERTICAL_VELOCITY] += game_world_state[const.GRAVITY]
 
+    def update_hitbox(self):
+        self.state[const.HITBOX] = self.state[const.HITBOX_CONFIG][self.state[const.STATE]]
+
     def apply_collision_detection(self, game_state):
-        self.state[const.HITBOX] = Rect((self.state[const.X_COORD]+16, self.state[const.Y_COORD]), (32, 64))
+        new_hitbox_data = self.state[const.HITBOX_CONFIG].get(self.state[const.STATE])
+        hitbox_pos = new_hitbox_data[0]
+        hitbox_size = new_hitbox_data[1]
+
+        self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
 
         plats = [Rect((x, y), (w, h)) for x, y, w, h, idx in game_state[const.LEVEL][const.PLATFORMS]]
+        brokeflag = self.state[const.HITBOX].collidelist(plats) != -1
 
         if self.state[const.VELOCITY]:
             xflag = abs(self.state[const.VELOCITY]) > 0
+            direction = 1 if self.state[const.VELOCITY] < 0 else -1
 
             while self.state[const.HITBOX].move(self.state[const.VELOCITY], 0).collidelist(plats) != -1:
+                self.state[const.VELOCITY] += direction
+
+                if brokeflag:
+                    self.state[const.X_COORD] += self.state[const.VELOCITY]
+                    self.state[const.VELOCITY] = 0
+                    self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
+
                 self.state[const.VELOCITY] += 1 if self.state[const.VELOCITY] < 0 else -1
 
             if xflag and not self.state[const.VELOCITY]:
@@ -71,8 +88,16 @@ class GameWorldEntity(GameObject):
 
         if self.state[const.VERTICAL_VELOCITY]:
             yflag = self.state[const.VERTICAL_VELOCITY] > 0
+            direction = 1 if self.state[const.VERTICAL_VELOCITY] < 0 else -1
 
             while self.state[const.HITBOX].move(0, self.state[const.VERTICAL_VELOCITY]).collidelist(plats) != -1:
+                self.state[const.VERTICAL_VELOCITY] += direction
+
+                if brokeflag and self.state[const.VERTICAL_VELOCITY]:
+                    self.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
+                    self.state[const.VERTICAL_VELOCITY] = 1
+                    self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
+
                 self.state[const.VERTICAL_VELOCITY] += 1 if self.state[const.VERTICAL_VELOCITY] < 0 else -1
 
             if yflag and not self.state[const.VERTICAL_VELOCITY]:

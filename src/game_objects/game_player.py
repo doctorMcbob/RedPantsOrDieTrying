@@ -1,8 +1,3 @@
-from pygame import (
-    Rect,
-    Surface,
-)
-
 from src.const import GameConstants as const
 
 from src.game_objects.game_world_entity import GameWorldEntity
@@ -21,11 +16,22 @@ MID_AIR_MOTION_STATE_WHITELIST = [
 ]
 
 JUMP_START_MOTION_STATE_BLACKLIST = [const.DIVE, const.DIVELANDJUMP, const.BONK]
-TRACTION_STATE_BLACKLIST = [const.RISING, const.AIR, const.FALLING, const.FASTFALLING, const.DIVE]
+TRACTION_STATE_BLACKLIST = [
+    const.RISING,
+    const.AIR,
+    const.FALLING,
+    const.FASTFALLING,
+    const.DIVE,
+    const.DIVELANDJUMP,
+]
 
-class Player(GameWorldEntity):
-    def __init__(self, player_state_template, player_sprite_sheet_key):
-        super(Player, self).__init__(player_state_template, player_sprite_sheet_key)
+class GamePlayer(GameWorldEntity):
+    def __init__(self, player_state_template, player_sprite_sheet_key, player_hitbox_config):
+        super(GamePlayer, self).__init__(
+            player_state_template,
+            player_sprite_sheet_key,
+            player_hitbox_config
+        )
 
         self.state[const.INPUT_CONFIG] = INPUT_CONFIG_TEMPLATE.copy()
         self.motion_state_handlers = {
@@ -41,10 +47,11 @@ class Player(GameWorldEntity):
         if player_inputs:
             utils.process_game_inputs(self.state, input_handler, player_inputs)
 
+        self.update_hitbox()
         self.update_movement_velocity(game_state, game_world_state)
         self.__update_motion_state()
         self.__update_traction_state()
-        self.__update_jump_state(game_state, game_world_state)
+        self.__update_jump_state(game_world_state)
         self.__update_falling_state()
         self.__update_dive_state()
         self.__update_bonk_state()
@@ -65,7 +72,7 @@ class Player(GameWorldEntity):
 
     def __apply_land_state(self):
         if self.state[const.FRAME] == self.state[const.LANDING_FRAME]:
-            self.state[const.STATE] = const.IDLE
+            self.state[const.STATE] = const.IDLE if self.state[const.MOVE] * self.state[const.VELOCITY] >= 0 else const.SLIDE
             self.state[const.FRAME] = 0
 
     def __apply_idle_state(self):
@@ -86,9 +93,16 @@ class Player(GameWorldEntity):
 
     def __apply_traction_state(self):
         if self.state[const.VELOCITY] > 0:
-            self.state[const.VELOCITY] = max(self.state[const.VELOCITY] - self.state[const.TRACTION], 0)
+            self.state[const.VELOCITY] = max(
+                self.state[const.VELOCITY] - self.state[const.TRACTION],
+                0
+            )
+
         else:
-            self.state[const.VELOCITY] = min(self.state[const.VELOCITY] + self.state[const.TRACTION], 0)
+            self.state[const.VELOCITY] = min(
+                self.state[const.VELOCITY] + self.state[const.TRACTION],
+                0
+            )
 
     def __update_motion_state(self):
         player_motion_state = self.state[const.STATE]
@@ -103,7 +117,7 @@ class Player(GameWorldEntity):
         if player_motion_state not in TRACTION_STATE_BLACKLIST:
             self.__apply_traction_state()
 
-    def __update_jump_state(self, game_state, game_world_state):
+    def __update_jump_state(self, game_world_state):
         is_starting_squat = self.state[const.JUMP] and self.state[const.STATE] not in MID_AIR_MOTION_STATE_WHITELIST
 
         if is_starting_squat:
@@ -168,7 +182,7 @@ class Player(GameWorldEntity):
                 self.state[const.FRAME] = 0
 
     def __update_bonk_state(self):
-        is_bonking = self.state[const.STATE] == const.BONK and self.state[const.FRAME] == 1
+        is_bonking = self.state[const.STATE] == const.BONK and self.state[const.FRAME] <= 1
 
         if is_bonking:
             self.state[const.VELOCITY] = -10 * self.state[const.DIRECTION]

@@ -8,10 +8,11 @@ from src.lib.input_manager.input_handlers import (
 
 from src.lib import utils
 from src.lib.input_manager import input_interpreter
-from src.game_objects.player import Player
+from src.game_objects.game_player import GamePlayer
 from src.game_objects.game_world import GameWorld
 from src.game_data_templates.player_state import PLAYER_STATE_TEMPLATE
 from src.game_data_templates.game_world_state import GAME_WORLD_STATE_TEMPLATE
+from src.game_data_templates.game_player_hitbox_config import GAME_PLAYER_HITBOX_CONFIG
 
 from src.game_data_templates.input_config import (
     INPUT_CONFIG_TEMPLATE,
@@ -20,7 +21,12 @@ from src.game_data_templates.input_config import (
 from src.const import GameConstants as const
 from src.config import GAME_CONFIG as config
 
-GAME_PLAYER_ONE = Player(PLAYER_STATE_TEMPLATE, config[const.PLAYER_ONE_SPRITE_SHEET])
+GAME_PLAYER_ONE = GamePlayer(
+    PLAYER_STATE_TEMPLATE,
+    config[const.PLAYER_ONE_SPRITE_SHEET],
+    GAME_PLAYER_HITBOX_CONFIG
+)
+
 GAME_WORLD = GameWorld(GAME_WORLD_STATE_TEMPLATE)
 GAME_PLAYER_LIST = [GAME_PLAYER_ONE]
 GAME_OBJECT_LIST = [GAME_WORLD, GAME_PLAYER_ONE]
