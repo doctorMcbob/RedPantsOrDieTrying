@@ -182,13 +182,13 @@ def reset_jump_and_dive_flags(state):
 
 HITBOX_STATE_DATA = {const.DIVELAND: ((0, 32), (64, 32))}
 
-for s in [const.DIVE, const.DIVELANDJUMP,
-          const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2]:
+for s in [const.DIVE, const.DIVELANDJUMP]:
     HITBOX_STATE_DATA[s] = ((0, 0), (64, 64))
 
 for s in [const.IDLE, const.RUN, const.SLIDE, const.JUMPSQUAT,
           const.RISING, const.LAND, const.BONK, const.BONKLAND,
-          const.FALLING, const.AIR, const.DIVESTART]:
+          const.FALLING, const.AIR, const.DIVESTART,
+          const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2]:
     HITBOX_STATE_DATA[s] = ((16, 0), (32, 64))
 
 
