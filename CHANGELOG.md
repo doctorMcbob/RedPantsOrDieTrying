@@ -32,6 +32,10 @@ All notable changes to this project will be documented in this file.
 -   [[RPA-4]](https://github.com/doctorMcbob/RedPantsOrDieTrying/issues/5) Game objects should manage own sprites
     -   Per the relocation of player state to the Player class; sprites are now managed by their own game objects.
 
+-   [[Dev-Platforming](https://github.com/doctorMcbob/RedPantsOrDieTrying/tree/Dev-Platforming) implementing platforming ideas
+    -   Changed screen dimensions in .env.sample to (960, 640)
+    -   Added Kickflip player states and sprites
+
 ## 0.1.0 - 03/18/2020
 
 -   Released base MVP functionality
