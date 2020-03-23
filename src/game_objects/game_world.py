@@ -9,109 +9,66 @@ from pygame import (
     Surface,
 )
 
-from const import GameConstants as const
+from src.const import GameConstants as const
+from src.game_objects.game_object import GameObject
 
-def get_board_position(state, x_pos, y_pos):
-    """Get new position coordinats based off of current position coordinates and board state"""
-    scroll_state = state[const.SCROLL]
+class GameWorld(GameObject):
+    def __init__(self, game_world_state_template):
+        super(GameWorld, self).__init__(game_world_state_template)
 
-    return (x_pos + scroll_state[0], y_pos + scroll_state[1])
+    def update_state(self, game_state, player_one):
+        player_one_state = player_one.get_state()
 
-def get_platform_surface(state, plat):
-    font = state[const.FONTS][const.FONT_HELVETICA]
-    surface = Surface((plat[2], plat[3]))
+        scroll_state = self.state[const.SCROLL]
+        player_one_x = player_one_state[const.X_COORD]
+        player_one_y = player_one_state[const.Y_COORD]
+        board_width = game_state[const.WIDTH]
+        board_height = game_state[const.HEIGHT]
 
-    surface.fill([(100, 100, 100), (200, 100, 100), (100, 200, 100), (100, 100, 200)][plat[4]])
-    surface.blit(font.render("Platform", 0, (0, 0, 0)), (0, 0))
+        scroll_state[0] = 0 - player_one_x + board_width / 2 - 16
+        scroll_state[1] = 0 - player_one_y + board_height / 2 - 32
 
-    return surface
+    def get_surface(self, game_state, player_one):
+        game_width = game_state[const.WIDTH]
+        game_height = game_state[const.HEIGHT]
+        game_world_surface = Surface((game_width, game_height))
 
-def get_surface(state, player_one_surface):
-    game_width = state[const.WIDTH]
-    game_height = state[const.HEIGHT]
-    player_direction = state[const.DIRECTION]
-    player_x_pos = state[const.X_COORD]
-    player_y_pos = state[const.Y_COORD]
-    surface = Surface((game_width, game_height))
+        game_world_surface.fill((255, 255, 255)) #draw background -- later
 
-    surface.fill((255, 255, 255)) #draw background -- later
+        for plat in game_state[const.LEVEL][const.PLATFORMS]:
+            platform_surface = self.__get_platform_surface(game_state, plat)
+            platform_position = self.__get_board_position(plat[0], plat[1])
 
-    for plat in state[const.LEVEL][const.PLATFORMS]:
-        surface.blit(get_platform_surface(state, plat), get_board_position(state, plat[0], plat[1]))
+            game_world_surface.blit(platform_surface, platform_position)
 
-    surface.blit(
-        pygame.transform.flip(player_one_surface, player_direction > 0, 0),
-        get_board_position(state, player_x_pos, player_y_pos)
-    )
+        self.__draw_player(game_state, game_world_surface, player_one)
 
-    return surface
+        return game_world_surface
 
-def apply_collision_detection(state):
-    #platform hit detection
-    # re rewite this when refactoring playor object
+    def __get_board_position(self, x_pos, y_pos):
+        """Get new position coordinats based off of current position coordinates and board state"""
+        scroll_state = self.state[const.SCROLL]
 
-    # gather hitboxes
-    plats = [Rect((x, y), (w, h)) for x, y, w, h, idx in state[const.LEVEL][const.PLATFORMS]]
-    pos, box = state[const.HITBOX]
-    hitbox = Rect((state[const.X_COORD]+pos[0], state[const.Y_COORD]+pos[1]), box)
+        return (x_pos + scroll_state[0], y_pos + scroll_state[1])
 
-    brokeflag = hitbox.collidelist(plats) != -1
-    
-    # X axis
-    if state[const.VELOCITY]:
-        xflag = abs(state[const.VELOCITY]) > 0
-        direction = 1 if state[const.VELOCITY] < 0 else -1
-        while hitbox.move(state[const.VELOCITY], 0).collidelist(plats) != -1:
-            state[const.VELOCITY] += direction
+    def __get_platform_surface(self, game_state, plat):
+        font = game_state[const.FONTS][const.FONT_HELVETICA]
+        surface = Surface((plat[2], plat[3]))
 
-        if brokeflag:
-            state[const.X_COORD] += state[const.VELOCITY]
-            state[const.VELOCITY] = 0
-            hitbox = Rect((state[const.X_COORD]+pos[0], state[const.Y_COORD]+pos[1]), box)
-        
-        if xflag and not state[const.VELOCITY]:
-            if state[const.STATE] in [const.DIVE, const.DIVELANDJUMP]:
-                state[const.STATE] = const.BONK
-                state[const.FRAME] = 0
+        surface.fill([(100, 100, 100), (200, 100, 100), (100, 200, 100), (100, 100, 200)][plat[4]])
+        surface.blit(font.render("Platform", 0, (0, 0, 0)), (0, 0))
 
-    # Y axis
-    if state[const.VERTICAL_VELOCITY]:
-        yflag = state[const.VERTICAL_VELOCITY] > 0
-        direction = 1 if state[const.VERTICAL_VELOCITY] < 0 else -1
-        while hitbox.move(0, state[const.VERTICAL_VELOCITY]).collidelist(plats) != -1:
-            state[const.VERTICAL_VELOCITY] += direction
+        return surface
 
-        if brokeflag and state[const.VERTICAL_VELOCITY]:
-            state[const.Y_COORD] += state[const.VERTICAL_VELOCITY]
-            state[const.VERTICAL_VELOCITY] = 1
-            hitbox = Rect((state[const.X_COORD]+pos[0], state[const.Y_COORD]+pos[1]), box)
+    def __draw_player(self, game_state, game_world_surface, player):
+        player_one_surface = player.get_surface(game_state)
+        player_one_state = player.get_state()
+        player_one_direction = player_one_state[const.DIRECTION]
+        player_one_x_pos = player_one_state[const.X_COORD]
+        player_one_y_pos = player_one_state[const.Y_COORD]
 
-        if yflag and not state[const.VERTICAL_VELOCITY]:
-            if state[const.STATE] in [const.FALLING, const.AIR, const.DIVELANDJUMP,
-                                      const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2]:
-                state[const.STATE] = const.LAND
-                state[const.FRAME] = 0
+        game_world_surface.blit(
+            pygame.transform.flip(player_one_surface, player_one_direction > 0, 0),
+            self.__get_board_position(player_one_x_pos, player_one_y_pos)
+        )
 
-            if state[const.STATE] in [const.DIVE, const.BONK]:
-                state[const.STATE] = const[state[const.STATE].value + const.LAND.value]
-                state[const.FRAME] = 0
-
-    # corner
-    if state[const.VELOCITY] and state[const.VERTICAL_VELOCITY]:
-        while hitbox.move(state[const.VELOCITY], state[const.VERTICAL_VELOCITY]).collidelist(plats) != -1:
-            state[const.VELOCITY] += 1 if state[const.VELOCITY] < 0 else -1
-            state[const.VERTICAL_VELOCITY] += 1 if state[const.VERTICAL_VELOCITY] < 0 else -1
-
-        
-def apply_state(state):
-    """Update scroll state of game board to simulate movement"""
-    apply_collision_detection(state)
-
-    scroll_state = state[const.SCROLL]
-    game_x_pos = state[const.X_COORD]
-    game_y_pos = state[const.Y_COORD]
-    board_width = state[const.WIDTH]
-    board_height = state[const.HEIGHT]
-
-    scroll_state[0] = 0 - game_x_pos + board_width / 2 - 16
-    scroll_state[1] = 0 - game_y_pos + board_height / 2 - 32
