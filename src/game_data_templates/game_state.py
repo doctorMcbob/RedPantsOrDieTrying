@@ -37,7 +37,7 @@ GAME_STATE_TEMPLATE = {
     const.FONTS: {},
     const.SHOULD_EXIT_FLAG: False,
     const.SHOULD_ADVANCE_FRAME: True,
-    const.KICKFLIPSTR: -35,
+    const.KICKFLIPSTR: -30,
     const.KICKFLIPLIMIT: -18,
     const.HITBOX: ((16, 0), (32, 64)),
 }
