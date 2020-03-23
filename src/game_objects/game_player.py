@@ -21,15 +21,9 @@ JUMP_START_MOTION_STATE_BLACKLIST = [
     const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2,
 ]
 TRACTION_STATE_BLACKLIST = [
-    const.RISING,
-    const.AIR,
-    const.FALLING,
-    const.FASTFALLING,
-    const.DIVE,
-    const.DIVELANDJUMP,
-    const.KICKFLIP0,
-    const.KICKFLIP1,
-    const.KICKFLIP2,
+    const.RISING, const.AIR, const.FALLING,
+    const.FASTFALLING, const.DIVE, const.DIVELANDJUMP,
+    const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2,
 ]
 
 class GamePlayer(GameWorldEntity):

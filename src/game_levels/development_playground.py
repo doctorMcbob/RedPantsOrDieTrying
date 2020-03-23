@@ -5,7 +5,7 @@ DEFAULT_LEVEL_CONFIG = {
     const.PLATFORMS: [
         (-config[const.WIDTH], 384, config[const.WIDTH] * 3, 96, 2),
         (-config[const.WIDTH], -256, 64, 640, 3),
-        (config[const.WIDTH]*2-64, -256, 64, 640, 3),
+        (config[const.WIDTH] * 2 - 64, -256, 64, 640, 3),
         (384, 320, 128, 64, 1),
         (612, 256, 64, 128, 1),
         (128, 192, 128, 192, 3),
