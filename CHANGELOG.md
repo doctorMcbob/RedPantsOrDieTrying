@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## 0.2.0 - Un-released
 
--   Added base pylint support
+-   Add `CHANGELOG.md`
+-   Added base `PyLint` support
 -   Added `requirements.txt` for easier dependency management
--   Updated readme with installation and boot instructions
+-   Updated `README.md` with installation and boot instructions
 -   Added support for environment variable configuration via `.env` file
 -   Added the following dependencies
     -   `python-dotenv==0.12.0`
@@ -25,8 +26,8 @@ All notable changes to this project will be documented in this file.
         -   GameObject
         -   GameWorld
         -   GameWorldEntity
-        -   Player
-    -   Decouple game state, Player state, and GameWorld state
+        -   GamePlayer
+    -   Decouple game state, GamePlayer state, and GameWorld state
 
 -   [[RPA-4]](https://github.com/doctorMcbob/RedPantsOrDieTrying/issues/5) Game objects should manage own sprites
     -   Per the relocation of player state to the Player class; sprites are now managed by their own game objects.
