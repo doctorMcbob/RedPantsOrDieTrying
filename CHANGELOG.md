@@ -20,6 +20,14 @@ All notable changes to this project will be documented in this file.
     -   Added dynamic sprite sheet loading
     -   Added support for dynamic level loading and default level selection
 
+-   [[RPA-2]](https://github.com/doctorMcbob/RedPantsOrDieTrying/issues/10) Add GamePlayer kick flip mechanic
+    -   Added `Kickflip` player states and sprites
+    -   Tweaked platformer constants.
+        -   Raised gravity
+	-   Strengthened jumps
+	-   Increased speed
+	-   Increased dive velocity
+
 -   [[RPA-3]](https://github.com/doctorMcbob/RedPantsOrDieTrying/issues/4) Decouple game object state from game state
     -   Switch game objects to classes
     -   Add the follolwing classes
@@ -31,6 +39,7 @@ All notable changes to this project will be documented in this file.
 
 -   [[RPA-4]](https://github.com/doctorMcbob/RedPantsOrDieTrying/issues/5) Game objects should manage own sprites
     -   Per the relocation of player state to the Player class; sprites are now managed by their own game objects.
+
 
 ## 0.1.0 - 03/18/2020
 

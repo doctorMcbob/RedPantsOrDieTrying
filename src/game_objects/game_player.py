@@ -13,16 +13,17 @@ MID_AIR_MOTION_STATE_WHITELIST = [
     const.RISING, const.AIR, const.FALLING,
     const.FASTFALLING, const.DIVE, const.DIVESTART,
     const.DIVELAND, const.DIVELANDJUMP, const.BONK,
+    const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2,
 ]
 
-JUMP_START_MOTION_STATE_BLACKLIST = [const.DIVE, const.DIVELANDJUMP, const.BONK]
+JUMP_START_MOTION_STATE_BLACKLIST = [
+    const.DIVE, const.DIVELANDJUMP, const.BONK,
+    const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2,
+]
 TRACTION_STATE_BLACKLIST = [
-    const.RISING,
-    const.AIR,
-    const.FALLING,
-    const.FASTFALLING,
-    const.DIVE,
-    const.DIVELANDJUMP,
+    const.RISING, const.AIR, const.FALLING,
+    const.FASTFALLING, const.DIVE, const.DIVELANDJUMP,
+    const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2,
 ]
 
 class GamePlayer(GameWorldEntity):
@@ -51,6 +52,8 @@ class GamePlayer(GameWorldEntity):
         self.update_movement_velocity(game_state, game_world_state)
         self.__update_motion_state()
         self.__update_traction_state()
+
+        self.__update_kickflip_state()
         self.__update_jump_state(game_world_state)
         self.__update_falling_state()
         self.__update_dive_state()
@@ -117,6 +120,25 @@ class GamePlayer(GameWorldEntity):
         if player_motion_state not in TRACTION_STATE_BLACKLIST:
             self.__apply_traction_state()
 
+
+    def __update_kickflip_state(self):
+        if self.state[const.STATE] == const.SLIDE and self.state[const.JUMP] and self.state[const.MOVE] == -1 * self.state[const.DIRECTION]:
+            self.state[const.STATE] = const.KICKFLIP0
+            self.state[const.FRAME] = 0
+
+            self.state[const.VERTICAL_VELOCITY] = self.state[const.KICKFLIPSTR]
+            self.state[const.DIRECTION] *= -1
+            self.state[const.VELOCITY] = self.state[const.DIRECTION] * 5
+
+        if self.state[const.STATE] == const.KICKFLIP0 and self.state[const.VERTICAL_VELOCITY] >= self.state[const.KICKFLIPLIMIT]:
+            self.state[const.STATE] = const.KICKFLIP1
+            self.state[const.FRAME] = 0
+
+        if self.state[const.STATE] in [const.KICKFLIP0, const.KICKFLIP1] and self.state[const.VERTICAL_VELOCITY] > 0:
+            self.state[const.STATE] = const.KICKFLIP2
+            self.state[const.FRAME] = 0
+
+
     def __update_jump_state(self, game_world_state):
         is_starting_squat = self.state[const.JUMP] and self.state[const.STATE] not in MID_AIR_MOTION_STATE_WHITELIST
 
@@ -145,7 +167,7 @@ class GamePlayer(GameWorldEntity):
                 self.state[const.FRAME] = 0
 
     def __update_falling_state(self):
-        is_falling = self.state[const.STATE] == const.AIR and self.state[const.MOVE] or self.state[const.MOVE] == const.DIVELANDJUMP
+        is_falling = self.state[const.STATE] == const.AIR and self.state[const.MOVE]
 
         if is_falling:
             if abs(self.state[const.VELOCITY] + self.state[const.DRIFT] * self.state[const.MOVE]) <= self.state[const.SPEED]:
@@ -153,6 +175,13 @@ class GamePlayer(GameWorldEntity):
             if self.state[const.VELOCITY]:
                 self.state[const.DIRECTION] = self.state[const.MOVE] if self.state[const.MOVE] else self.state[const.DIRECTION]
 
+        is_flipping = self.state[const.STATE] in [const.KICKFLIP1, const.KICKFLIP2]
+
+        if is_flipping:
+            if self.state[const.MOVE] == self.state[const.DIRECTION]:
+                if abs(self.state[const.VELOCITY] + self.state[const.DRIFT] * self.state[const.MOVE]) <= self.state[const.SPEED]:
+                    self.state[const.VELOCITY] += self.state[const.DRIFT] * self.state[const.MOVE]
+        
     def __update_dive_state(self):
         is_starting_dive = self.state[const.STATE] == const.AIR and self.state[const.DIVE]
 

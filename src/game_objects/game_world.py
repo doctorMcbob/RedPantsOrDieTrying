@@ -71,3 +71,4 @@ class GameWorld(GameObject):
             pygame.transform.flip(player_one_surface, player_one_direction > 0, 0),
             self.__get_board_position(player_one_x_pos, player_one_y_pos)
         )
+
