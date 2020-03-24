@@ -19,9 +19,11 @@ PLAYER_STATE_TEMPLATE = {
     const.DIVELJSTR: -20,
     const.SPEED: 12,
     const.TRACTION: 2,
-    const.JUMP_SPEED: -32,
+    const.JUMP_SPEED: -29,
     const.AIR: 20,
     const.DRIFT: 2,
     const.KICKFLIPSTR: -35,
     const.KICKFLIPLIMIT: -28,
+    const.WALLJUMPSTR: 14,
+    const.WALLJUMPFRM:3,
 }

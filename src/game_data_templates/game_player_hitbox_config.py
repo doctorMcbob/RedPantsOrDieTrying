@@ -7,7 +7,8 @@ NORMAL_HITBOX_SIZE_CONFIG_STATE_KEY_LIST = [
     const.JUMPSQUAT, const.RISING, const.LAND,
     const.BONK, const.BONKLAND, const.FALLING,
     const.AIR, const.DIVESTART, const.KICKFLIP0,
-    const.KICKFLIP1, const.KICKFLIP2,
+    const.KICKFLIP1, const.KICKFLIP2, const.WALL,
+    const.WALLJUMPSTART,
 ]
 
 # States that require special hitbox size configurations

@@ -14,6 +14,7 @@ MID_AIR_MOTION_STATE_WHITELIST = [
     const.FASTFALLING, const.DIVE, const.DIVESTART,
     const.DIVELAND, const.DIVELANDJUMP, const.BONK,
     const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2,
+    const.WALL, const.WALLJUMPSTART,
 ]
 
 JUMP_START_MOTION_STATE_BLACKLIST = [
@@ -49,13 +50,18 @@ class GamePlayer(GameWorldEntity):
 
         super(GamePlayer, self).apply_collision_detection(game_state)
 
-        # if we were moving and are no longer moving, change state to bonk
+        # if we were moving and are no longer moving
         if xflag and not self.state[const.VELOCITY]:
+            # set up for wall jump if in the air
+            if self.state[const.STATE] in [const.AIR, const.KICKFLIP2]:
+                self.state[const.STATE] = const.WALL
+                self.state[const.FRAME] = 0
+
+            # bonk out of dive or divelandjump
             if self.state[const.STATE] in [const.DIVE, const.DIVELANDJUMP]:
                 self.state[const.STATE] = const.BONK
                 self.state[const.FRAME] = 0
-
-                
+        
         # if the player was moving downward and has stopped
         if yflag and not self.state[const.VERTICAL_VELOCITY]:
                 # switch from most airborn states to LAND animation
@@ -83,11 +89,13 @@ class GamePlayer(GameWorldEntity):
         self.__update_traction_state()
 
         self.__update_kickflip_state()
+        self.__update_walljump_state()
         self.__update_jump_state(game_world_state)
         self.__update_falling_state()
         self.__update_dive_state()
         self.__update_bonk_state()
         self.__reset_jump_and_dive_flags()
+
         self.apply_collision_detection(game_state)
 
     def update_controls(self, new_input_config):
@@ -167,18 +175,34 @@ class GamePlayer(GameWorldEntity):
             self.state[const.STATE] = const.KICKFLIP2
             self.state[const.FRAME] = 0
 
+    def __update_walljump_state(self):
+        is_starting_walljump = self.state[const.JUMP] and self.state[const.STATE] == const.WALL
 
+        if is_starting_walljump:
+            self.state[const.STATE] = const.WALLJUMPSTART
+            self.state[const.FRAME] = 0
+
+        if self.state[const.STATE] == const.WALLJUMPSTART:
+            self.state[const.VERTICAL_VELOCITY] = 0
+
+        is_walljumping = self.state[const.STATE] == const.WALLJUMPSTART and self.state[const.FRAME] >= self.state[const.WALLJUMPFRM]
+
+        if is_walljumping:
+            self.state[const.VELOCITY] = self.state[const.DIRECTION] * -1 * self.state[const.WALLJUMPSTR]
+            self.state[const.DIRECTION] *= -1
+            self.state[const.VERTICAL_VELOCITY] = self.state[const.JUMP_SPEED]
+        
     def __update_jump_state(self, game_world_state):
         is_starting_squat = self.state[const.JUMP] and self.state[const.STATE] not in MID_AIR_MOTION_STATE_WHITELIST
-
+        
         if is_starting_squat:
             self.state[const.STATE] = const.JUMPSQUAT
             self.state[const.FRAME] = 0
-
+    
         is_starting_jump = self.state[const.STATE] == const.JUMPSQUAT and self.state[const.FRAME] >= self.state[const.JUMP_SQUAT_FRAME]
 
         if is_starting_jump:
-            self.state[const.VERTICAL_VELOCITY] += self.state[const.JUMP_SPEED]
+            self.state[const.VERTICAL_VELOCITY] = self.state[const.JUMP_SPEED]
 
         is_jumping = self.state[const.STATE] not in JUMP_START_MOTION_STATE_BLACKLIST
 
