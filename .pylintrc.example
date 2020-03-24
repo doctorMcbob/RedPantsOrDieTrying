@@ -1,0 +1,22 @@
+[MASTER]
+##
+# You must place your pip site-packages path absolute path (or equivalent module
+# install path) below so modules can be found correctly.
+#
+# "How do I find the location of my Python site-packages directory?"
+# https://stackoverflow.com/questions/122327/how-do-i-find-the-location-of-my-python-site-packages-directory
+init-hook='import sys; sys.path.append(   *****PUT YOUR PIP PACKAGE INSTALL PATH HERE*****   )'
+
+[MESSAGES CONTROL]
+##
+# Enable the message, report, category or checker with the given id(s). You can
+# either give multiple identifier separated by comma (,) or put this option
+# multiple time.
+#enable=
+
+##
+# Disable the message, report, category or checker with the given id(s). You
+# can either give multiple identifier separated by comma (,) or put this option
+# multiple time (only on the command line, not in the configuration file where
+# it should appear only once).
+disable=missing-docstring,relative-import

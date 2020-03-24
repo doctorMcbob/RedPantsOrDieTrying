@@ -1,0 +1,27 @@
+from src.const import GameConstants as const
+
+PLAYER_STATE_TEMPLATE = {
+    const.X_COORD: 0,
+    const.Y_COORD: 0,
+    const.VELOCITY: 0,
+    const.VERTICAL_VELOCITY: 0,
+    const.STATE: const.IDLE,
+    const.DIRECTION: 1,
+    const.MOVE: 0,
+    const.JUMP: 0,
+    const.DIVE: 0,
+    const.FRAME: 0,
+    const.LANDING_FRAME: 2,
+    const.JUMP_SQUAT_FRAME: 2,
+    const.BONKLF: 5,
+    const.DSTARTF: 3,
+    const.DIVESTR: 22,
+    const.DIVELJSTR: -20,
+    const.SPEED: 12,
+    const.TRACTION: 2,
+    const.JUMP_SPEED: -32,
+    const.AIR: 20,
+    const.DRIFT: 2,
+    const.KICKFLIPSTR: -35,
+    const.KICKFLIPLIMIT: -28,
+}
