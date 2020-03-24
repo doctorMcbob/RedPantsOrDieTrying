@@ -29,12 +29,5 @@ sheet_data = {
     "FALLING": ((704, 0), (64, 64)),
     "LAND": ((768, 0), (64, 64)),
 }
-hitbox_data = {}
-for state in ["IDLE", "RUN", "SLIDE", "JUMPSQUAT", "RISING", "AIR",
-              "FALLING", "LAND", "BONK", "BONKLAND", "DIVESTART"]: # relative positions
-    hitbox_data[state] = ((16, 0), (32, 64))
-hitbox_data["DIVE"] = ((0, 0), (64, 64))
-hitbox_data["DIVELAND"] = ((0, 32), (64, 32))
-hitbox_data["DIVELANDJUMP"] = ((0, 0), (64, 64))
 
 sprites = load_spritesheet('img/player.png', sheet_data, colorkey=(1, 255, 1))
