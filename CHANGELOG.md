@@ -20,14 +20,13 @@ All notable changes to this project will be documented in this file.
     -   Added dynamic sprite sheet loading
     -   Added support for dynamic level loading and default level selection
 
--   [[RPA-2](https://github.com/doctorMcbob/RedPantsOrDieTrying/issues/10) implementing platforming ideas
-    -   Changed screen dimensions in .env.sample to (960, 640)
-    -   Added Kickflip player states and sprites
+-   [[RPA-2]](https://github.com/doctorMcbob/RedPantsOrDieTrying/issues/10) Add GamePlayer kick flip mechanic
+    -   Added `Kickflip` player states and sprites
     -   Tweaked platformer constants.
-        -   raised gravity
-	-   strengthened jumps
-	-   increased speed
-	-   increased dive velocity
+        -   Raised gravity
+	-   Strengthened jumps
+	-   Increased speed
+	-   Increased dive velocity
 
 -   [[RPA-3]](https://github.com/doctorMcbob/RedPantsOrDieTrying/issues/4) Decouple game object state from game state
     -   Switch game objects to classes
