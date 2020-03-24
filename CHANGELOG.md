@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.2.0 - Un-released
+## 0.3.0 - Un-Released
+
+-   
+
+## 0.2.0 - 03/23/2020
 
 -   Add `CHANGELOG.md`
 -   Added base `PyLint` support
