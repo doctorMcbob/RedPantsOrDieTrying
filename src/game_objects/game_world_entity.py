@@ -63,13 +63,12 @@ class GameWorldEntity(GameObject):
         self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
 
         plats = [Rect((x, y), (w, h)) for x, y, w, h, idx in game_state[const.LEVEL][const.PLATFORMS]]
+
         # this flag checks for a broken state where the player starts overlapped with a platform
         brokeflag = self.state[const.HITBOX].collidelist(plats) != -1
 
         # X axis
         if self.state[const.VELOCITY]:
-            # xflag checks if we are moving
-            xflag = abs(self.state[const.VELOCITY]) > 0
             direction = 1 if self.state[const.VELOCITY] < 0 else -1
 
             # as long as hitbox -> x velocity collides with a platform, decrement x velocity
@@ -83,18 +82,9 @@ class GameWorldEntity(GameObject):
                 self.state[const.X_COORD] += self.state[const.VELOCITY]
                 self.state[const.VELOCITY] = 0
                 self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
-            # if we were moving and are no longer moving, change state to bonk
-            # this logic should ideally be in the player state machine
-            # but i havent thought of a good way to handle hit detection logic there
-            if xflag and not self.state[const.VELOCITY]:
-                if self.state[const.STATE] in [const.DIVE, const.DIVELANDJUMP]:
-                    self.state[const.STATE] = const.BONK
-                    self.state[const.FRAME] = 0
 
-        # Y axis -- more or less the same
+        # Y axis
         if self.state[const.VERTICAL_VELOCITY]:
-            # checks if moving vertically DOWNWARD specifically
-            yflag = self.state[const.VERTICAL_VELOCITY] > 0
             direction = 1 if self.state[const.VERTICAL_VELOCITY] < 0 else -1
 
             # while hitbox -> y velocity collides with plat, decrement y velocity
@@ -107,20 +97,6 @@ class GameWorldEntity(GameObject):
                 self.state[const.VERTICAL_VELOCITY] = 1
                 self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
                 
-            # this time this line will trigger if the player was moving downward and has stopped
-            if yflag and not self.state[const.VERTICAL_VELOCITY]:
-                # switch from most airborn states to LAND animation
-                if self.state[const.STATE] in [const.FALLING, const.AIR, const.DIVELANDJUMP,
-                                               const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2]:
-                    self.state[const.STATE] = const.LAND
-                    self.state[const.FRAME] = 0
-
-                # DIVE -> DIVELAND  BONK -> BONKLAND
-                if self.state[const.STATE] in [const.DIVE, const.BONK]:
-                    # this line is a little hacky but whatever
-                    self.state[const.STATE] = const[self.state[const.STATE].value + const.LAND.value]
-                    self.state[const.FRAME] = 0
-
 
         # bug in the corner
         if self.state[const.VELOCITY] and self.state[const.VERTICAL_VELOCITY]:

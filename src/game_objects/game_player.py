@@ -42,6 +42,35 @@ class GamePlayer(GameWorldEntity):
             const.LAND: self.__apply_land_state,
         }
 
+    def apply_collision_detection(self, game_state):
+        # checks if we are moving
+        xflag = abs(self.state[const.VELOCITY]) > 0
+        yflag = self.state[const.VERTICAL_VELOCITY] > 0
+
+        super(GamePlayer, self).apply_collision_detection(game_state)
+
+        # if we were moving and are no longer moving, change state to bonk
+        if xflag and not self.state[const.VELOCITY]:
+            if self.state[const.STATE] in [const.DIVE, const.DIVELANDJUMP]:
+                self.state[const.STATE] = const.BONK
+                self.state[const.FRAME] = 0
+
+                
+        # if the player was moving downward and has stopped
+        if yflag and not self.state[const.VERTICAL_VELOCITY]:
+                # switch from most airborn states to LAND animation
+                if self.state[const.STATE] in [const.FALLING, const.AIR, const.DIVELANDJUMP,
+                                               const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2]:
+                    self.state[const.STATE] = const.LAND
+                    self.state[const.FRAME] = 0
+
+                # DIVE -> DIVELAND  BONK -> BONKLAND
+                if self.state[const.STATE] in [const.DIVE, const.BONK]:
+                    # this line is a little hacky but whatever
+                    self.state[const.STATE] = const[self.state[const.STATE].value + const.LAND.value]
+                    self.state[const.FRAME] = 0
+
+
     def update_state(self, game_state, game_world_state, raw_game_inputs):
         player_inputs = self.__parse_inputs(raw_game_inputs)
 
