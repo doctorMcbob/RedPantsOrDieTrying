@@ -1,3 +1,5 @@
+import pygame, time, threading
+
 from src.const import GameConstants as const
 
 from src.game_objects.game_world_entity import GameWorldEntity
@@ -41,6 +43,20 @@ class GamePlayer(GameWorldEntity):
             const.RUN: self.__apply_run_state,
             const.LAND: self.__apply_land_state,
         }
+
+    def initialize(self):
+        super(GamePlayer, self).initialize()
+
+        self.sfx = pygame.mixer.Sound('jump.wav')
+        self.is_playing = False
+
+
+    def play_jump_sfx(self, name):
+        print(name)
+        self.sfx.play()
+        time.sleep(.5)
+        self.sfx.stop()
+        self.is_playing = False
 
     def update_state(self, game_state, game_world_state, raw_game_inputs):
         player_inputs = self.__parse_inputs(raw_game_inputs)
@@ -149,6 +165,11 @@ class GamePlayer(GameWorldEntity):
         is_starting_jump = self.state[const.STATE] == const.JUMPSQUAT and self.state[const.FRAME] >= self.state[const.JUMP_SQUAT_FRAME]
 
         if is_starting_jump:
+            if not self.is_playing:
+                self.is_playing = True
+                sfx = threading.Thread(target=self.play_jump_sfx, args=(1,))
+                sfx.start()
+
             self.state[const.VERTICAL_VELOCITY] += self.state[const.JUMP_SPEED]
 
         is_jumping = self.state[const.STATE] not in JUMP_START_MOTION_STATE_BLACKLIST

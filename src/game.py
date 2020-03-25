@@ -34,6 +34,7 @@ GAME_SYSTEM_INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
 
 def init_game(game_state):
     # pylint: disable=no-member
+    pygame.mixer.init(48000, -16, 1, 1024)
     pygame.init()
     # pylint: enable=no-member
 

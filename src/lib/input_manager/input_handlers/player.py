@@ -1,5 +1,4 @@
 """Apply player related game state mutations based off of player input"""
-
 from src.const import (
     InputConstants,
     GameConstants,
