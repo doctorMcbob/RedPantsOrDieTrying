@@ -98,6 +98,7 @@ class GamePlayer(GameWorldEntity):
         self.__reset_jump_and_dive_flags()
 
         self.apply_collision_detection(game_state)
+        
 
     def update_controls(self, new_input_config):
         self.state[const.INPUT_CONFIG] = new_input_config
