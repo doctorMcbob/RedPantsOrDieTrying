@@ -41,6 +41,14 @@ All notable changes to this project will be documented in this file.
     -   Per the relocation of player state to the Player class; sprites are now managed by their own game objects.
 
 
+-   RPA-6 Walljump mechanic
+    -   Walljump functionality
+        - walljump startup frames : 3
+        - walljump horizontal strength : 14
+    -   Animations
+    -   Hit detection redux
+        - separated state logic to player object out of game world entity
+
 ## 0.1.0 - 03/18/2020
 
 -   Released base MVP functionality
