@@ -90,7 +90,8 @@ class GamePlayer(GameWorldEntity):
 
         self.__update_kickflip_state()
         self.__update_walljump_state()
-        self.__update_jump_state(game_world_state)
+        self.__update_jump_state()
+        self.__update_air_state(game_world_state)
         self.__update_falling_state()
         self.__update_dive_state()
         self.__update_bonk_state()
@@ -192,7 +193,7 @@ class GamePlayer(GameWorldEntity):
             self.state[const.DIRECTION] *= -1
             self.state[const.VERTICAL_VELOCITY] = self.state[const.JUMP_SPEED]
         
-    def __update_jump_state(self, game_world_state):
+    def __update_jump_state(self):
         is_starting_squat = self.state[const.JUMP] and self.state[const.STATE] not in MID_AIR_MOTION_STATE_WHITELIST
         
         if is_starting_squat:
@@ -204,9 +205,11 @@ class GamePlayer(GameWorldEntity):
         if is_starting_jump:
             self.state[const.VERTICAL_VELOCITY] = self.state[const.JUMP_SPEED]
 
-        is_jumping = self.state[const.STATE] not in JUMP_START_MOTION_STATE_BLACKLIST
+    def __update_air_state(self, game_world_state):
+        # seperated from jump states because it should still trigger when walking off a platform
+        is_airborn = self.state[const.STATE] not in JUMP_START_MOTION_STATE_BLACKLIST
 
-        if is_jumping:
+        if is_airborn:
             if abs(self.state[const.VERTICAL_VELOCITY]) > game_world_state[const.GRAVITY]:
                 self.state[const.STATE] = const.AIR
                 self.state[const.FRAME] = 0
