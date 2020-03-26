@@ -66,13 +66,15 @@ class GameWorldEntity(GameObject):
 
         # this flag checks for a broken state where the player starts overlapped with a platform
         brokeflag = self.state[const.HITBOX].collidelist(plats) != -1
-
+        xflag, yflag = False, False
+        
         # X axis
         if self.state[const.VELOCITY]:
             direction = 1 if self.state[const.VELOCITY] < 0 else -1
 
             # as long as hitbox -> x velocity collides with a platform, decrement x velocity
             while self.state[const.HITBOX].move(self.state[const.VELOCITY], 0).collidelist(plats) != -1:
+                xflag = True
                 self.state[const.VELOCITY] += direction
 
             # if the player is overlapped with a platform then the last bit will have left the x velocity
@@ -89,6 +91,7 @@ class GameWorldEntity(GameObject):
 
             # while hitbox -> y velocity collides with plat, decrement y velocity
             while self.state[const.HITBOX].move(0, self.state[const.VERTICAL_VELOCITY]).collidelist(plats) != -1:
+                yflag = True
                 self.state[const.VERTICAL_VELOCITY] += direction
 
             # same as above but for Y axis
@@ -104,3 +107,12 @@ class GameWorldEntity(GameObject):
             while self.state[const.HITBOX].move(self.state[const.VELOCITY], self.state[const.VERTICAL_VELOCITY]).collidelist(plats) != -1:
                 self.state[const.VELOCITY] += 1 if self.state[const.VELOCITY] < 0 else -1
                 self.state[const.VERTICAL_VELOCITY] += 1 if self.state[const.VERTICAL_VELOCITY] < 0 else -1
+
+        if xflag:
+            self.state[const.X_COORD] += self.state[const.VELOCITY]
+            self.state[const.VELOCITY] = 0
+            self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)    
+        if yflag:
+            self.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
+            self.state[const.VERTICAL_VELOCITY] = 0
+            self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)

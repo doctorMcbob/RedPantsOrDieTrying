@@ -29,6 +29,9 @@ DEFAULT_SPRITE_CONFIG = {
         "KICKFLIP2:0": ((1536, 0), (64, 64)),
         "KICKFLIP2:4": ((1600, 0), (64, 64)),
         "KICKFLIP2:8": ((1664, 0), (64, 64)),
+        "WALL": ((1728, 0), (64, 64)),
+        "WALLJUMPSTART:0": ((1792, 0), (64, 64)),
+        "WALLJUMPSTART:2": ((1856, 0), (64, 64)),
     }
 }
 
