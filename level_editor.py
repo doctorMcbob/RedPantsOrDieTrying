@@ -26,6 +26,8 @@ load_dotenv(dotenv_path=ENV_FILE_PATH)
 # Add root game directory to system path for module loading
 sys.path.append(ROOT_DIR.as_posix())
 
+path_to_levels = Path('.') / "src/game_levels/bin/"
+
 from src.game_levels.levels import load_level
 from src.const import GameConstants as const
 from src.game_data_templates.game_world_state import GAME_WORLD_STATE_TEMPLATE
@@ -45,6 +47,18 @@ except IOError:
         const.SPIKES: [],
     }
 
+def save():
+    filename = input("Save as (blank for NO SAVE)\n> ")
+    if not filename: return
+    level = {
+        "PLATS": LEVEL[const.PLATFORMS],
+        "ENEMIES": LEVEL[const.ENEMIES],
+        "SPIKES": LEVEL[const.SPIKES],
+    }
+    with open(path_to_levels / filename, "w") as f:
+        f.write(repr(level))
+
+
 GAME_WORLD = GameWorld(GAME_WORLD_STATE_TEMPLATE)
 GAME_STATE = GAME_STATE_TEMPLATE.copy()            
 GAME_STATE[const.SCREEN] = pygame.display.set_mode((
@@ -58,9 +72,10 @@ font = GAME_STATE[const.FONTS][const.FONT_HELVETICA] = pygame.font.SysFont("Helv
 CURSOR = [GAME_STATE[const.WIDTH] / 2, GAME_STATE[const.HEIGHT] / 2]
 CORNER = None
 
+
 def get_surface(level):
-    w = GAME_STATE[const.WIDTH] / 2
-    h = GAME_STATE[const.HEIGHT] / 2
+    xscroll = CURSOR[0] - GAME_STATE[const.WIDTH] // 2
+    yscroll = CURSOR[1] - GAME_STATE[const.HEIGHT] // 2
     surf = Surface((
         GAME_STATE[const.WIDTH],
         GAME_STATE[const.HEIGHT]
@@ -70,14 +85,18 @@ def get_surface(level):
         surface = Surface((plat[2], plat[3]))
         surface.fill([(100, 100, 100), (200, 100, 100), (100, 200, 100), (100, 100, 200)][plat[4]])
         surface.blit(font.render("Platform", 0, (0, 0, 0)), (0, 0))
-        surf.blit(surface, (plat[0], plat[1]))
-    if CORNER is not None: surf.blit(font.render("C", 0, (0, 0, 0)), (CORNER[0], CORNER[1]))
+        surf.blit(surface, (plat[0] - xscroll , plat[1] - yscroll))
+    if CORNER is not None: surf.blit(font.render("C", 0, (0, 0, 0)), (CORNER[0]-xscroll, CORNER[1]-yscroll))
     return surf
 
 def draw_cursor():
-    pygame.draw.line(GAME_STATE[const.SCREEN], (255, 0, 0), (CURSOR[0], CURSOR[1]), (CURSOR[0]+32, CURSOR[1]+32), 2)
-    pygame.draw.line(GAME_STATE[const.SCREEN], (255, 0, 0), (CURSOR[0], CURSOR[1]+32), (CURSOR[0]+32, CURSOR[1]), 2)
-        
+    pygame.draw.line(GAME_STATE[const.SCREEN], (255, 0, 0), 
+        (GAME_STATE[const.WIDTH] // 2, GAME_STATE[const.HEIGHT] // 2),
+        (GAME_STATE[const.WIDTH] // 2 + 32, GAME_STATE[const.HEIGHT] // 2 + 32), 2)
+    pygame.draw.line(GAME_STATE[const.SCREEN], (255, 0, 0),
+        (GAME_STATE[const.WIDTH] // 2, GAME_STATE[const.HEIGHT] // 2 + 32),
+        (GAME_STATE[const.WIDTH] // 2 + 32, GAME_STATE[const.HEIGHT] // 2), 2)
+
 
 def make_platform(level):
     global CORNER
@@ -101,13 +120,11 @@ while True:
             if e.key == K_LEFT: CURSOR[0] -= 32
             if e.key == K_UP: CURSOR[1] -= 32
             if e.key == K_DOWN: CURSOR[1] += 32
-            
+
             if e.key == K_SPACE: make_platform(LEVEL)
+
+            if e.key == K_s and pygame.key.get_mods() & KMOD_CTRL: save()
 
     GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
     draw_cursor()
     pygame.display.update()
-
-    
-
-    
