@@ -1,5 +1,7 @@
 import pygame
 
+import sys
+
 import src.lib.level_manager as level_manager
 
 from src.lib.input_manager.input_handlers import (
@@ -42,7 +44,7 @@ def init_game(game_state):
         game_state[const.HEIGHT]
     ))
 
-    game_state[const.LEVEL] = level_manager.get_level()
+    game_state[const.LEVEL] = level_manager.get_level(sys.argv[-1])
     game_state[const.GAME_CLOCK] = pygame.time.Clock()
 
     # @TODO move to src.font_book.py
