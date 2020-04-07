@@ -17,6 +17,9 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
+# okay im copy pasting a lot from boot here
+# just trying to get wheels on
+
 ROOT_DIR = Path('.')
 ENV_FILE_PATH = ROOT_DIR / '.env'
 
@@ -28,14 +31,32 @@ sys.path.append(ROOT_DIR.as_posix())
 
 path_to_levels = Path('.') / "src/game_levels/bin/"
 
+from src.game import *
 from src.game_levels.levels import load_level
 from src.const import GameConstants as const
+from src.config import GAME_CONFIG as config
 from src.game_data_templates.game_world_state import GAME_WORLD_STATE_TEMPLATE
 from src.game_data_templates.game_state import GAME_STATE_TEMPLATE
 from src.game_objects.game_world import GameWorld
+from src.lib.input_manager.input_handlers import (
+    game as game_input_handler,
+)
+
+from src.lib import utils
+from src.lib.input_manager import input_interpreter
+from src.game_objects.game_player import GamePlayer
+from src.game_objects.game_world import GameWorld
+from src.game_data_templates.player_state import PLAYER_STATE_TEMPLATE
+from src.game_data_templates.game_world_state import GAME_WORLD_STATE_TEMPLATE
+from src.game_data_templates.game_player_hitbox_config import GAME_PLAYER_HITBOX_CONFIG
+
+from src.game_data_templates.input_config import (
+    INPUT_CONFIG_TEMPLATE,
+)
 
 pygame.init()
 
+# try to load level from command line
 try:
     LEVEL = load_level(sys.argv[-1])
 except IOError:
@@ -59,14 +80,21 @@ def save():
         f.write(repr(level))
 
 
-GAME_WORLD = GameWorld(GAME_WORLD_STATE_TEMPLATE)
-GAME_STATE = GAME_STATE_TEMPLATE.copy()            
-GAME_STATE[const.SCREEN] = pygame.display.set_mode((
+def reset_game_state():
+    GAME_STATE = GAME_STATE_TEMPLATE.copy()            
+    GAME_STATE[const.SCREEN] = pygame.display.set_mode((
         GAME_STATE[const.WIDTH],
         GAME_STATE[const.HEIGHT]
-))
-GAME_STATE[const.LEVEL] = LEVEL
-GAME_STATE[const.GAME_CLOCK] = pygame.time.Clock()
+    ))
+    GAME_STATE[const.LEVEL] = LEVEL
+    GAME_STATE[const.GAME_CLOCK] = pygame.time.Clock()
+    GAME_STATE[const.FONTS][const.FONT_HELVETICA] = pygame.font.SysFont("Helvetica", 16)
+
+    pygame.display.set_caption("lookin good")
+
+    return GAME_STATE
+
+GAME_STATE = reset_game_state()
 font = GAME_STATE[const.FONTS][const.FONT_HELVETICA] = pygame.font.SysFont("Helvetica", 16)
 
 CURSOR = [GAME_STATE[const.WIDTH] / 2, GAME_STATE[const.HEIGHT] / 2]
@@ -112,6 +140,34 @@ def make_platform(level):
 
     CORNER = None
 
+# changed from the main loop in game.py to not quit on game exit
+def alt_main_loop(game_state):
+    GAME_PLAYER_ONE = GamePlayer(
+        PLAYER_STATE_TEMPLATE,
+        config[const.PLAYER_ONE_SPRITE_SHEET],
+        GAME_PLAYER_HITBOX_CONFIG
+    )
+    GAME_WORLD = GameWorld(GAME_WORLD_STATE_TEMPLATE)
+    GAME_SYSTEM_INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
+    GAME_PLAYER_ONE.initialize()
+
+    while True:
+        game_state[const.GAME_CLOCK].tick(30)
+        raw_game_inputs = pygame.event.get()
+        system_game_inputs = input_interpreter.parse_input(raw_game_inputs, GAME_SYSTEM_INPUT_CONFIG)
+        if system_game_inputs: utils.process_game_inputs(game_state, game_input_handler, system_game_inputs)
+        if game_state[const.SHOULD_EXIT_FLAG]: return
+        if game_state[const.SHOULD_ADVANCE_FRAME]:
+            GAME_PLAYER_ONE.get_state()[const.FRAME] += 1
+            GAME_PLAYER_ONE.update_state(game_state, GAME_WORLD.get_state(), raw_game_inputs)
+            GAME_WORLD.update_state(game_state, GAME_PLAYER_ONE)
+            if game_state[const.IS_DEBUG_MODE_ACTIVE]: print_game_states(game_state)
+            game_world_surface = GAME_WORLD.get_surface(game_state, GAME_PLAYER_ONE)
+            draw_screen(game_state, game_world_surface)
+            
+        if game_state[const.IS_DEBUG_MODE_ENABLED]: game_state[const.SHOULD_ADVANCE_FRAME] = not game_state[const.IS_DEBUG_MODE_ACTIVE]
+
+# main loop
 while True:
     for e in pygame.event.get():
         if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE: quit()
@@ -124,7 +180,9 @@ while True:
             if e.key == K_SPACE: make_platform(LEVEL)
 
             if e.key == K_s and pygame.key.get_mods() & KMOD_CTRL: save()
-
+            if e.key == K_RETURN:
+                GAME_STATE = reset_game_state()
+                alt_main_loop(GAME_STATE)
     GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
     draw_cursor()
     pygame.display.update()
