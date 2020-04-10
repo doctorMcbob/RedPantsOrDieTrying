@@ -75,6 +75,8 @@ class GameConstants(Enum):
     PLAYER_ONE_SPRITE_SHEET = "PLAYER_ONE_SPRITE_SHEET_KEY"
     WALLJUMPSTR = "WALLJUMPSTR"
     WALLJUMPFRM = "WALLJUMPFRM"
+    SPAWN = "SPAWN"
+    DMGFR = "DMGFR"
     # ----- states -----
     AIR = "AIR"
     SLIDE = "SLIDE"
@@ -96,3 +98,4 @@ class GameConstants(Enum):
     KICKFLIP2 = "KICKFLIP2"
     WALL = "WALL"
     WALLJUMPSTART = "WALLJUMPSTART"
+    DMG = "DMG"

@@ -43,12 +43,12 @@ class GamePlayer(GameWorldEntity):
             const.LAND: self.__apply_land_state,
         }
 
-    def apply_collision_detection(self, game_state):
+    def apply_platform_collision_detection(self, game_state):
         # checks if we are moving
         xflag = abs(self.state[const.VELOCITY]) > 0
         yflag = self.state[const.VERTICAL_VELOCITY] > 0
 
-        super(GamePlayer, self).apply_collision_detection(game_state)
+        super(GamePlayer, self).apply_platform_collision_detection(game_state)
 
         # if we were moving and are no longer moving
         if xflag and not self.state[const.VELOCITY]:
@@ -77,6 +77,14 @@ class GamePlayer(GameWorldEntity):
                     self.state[const.FRAME] = 0
 
 
+    def apply_hazard_collision_detection(self, game_state):
+        if self.state[const.STATE] == const.DMG: return
+        if super(GamePlayer, self).apply_hazard_collision_detection(game_state):
+            self.state[const.STATE] = const.DMG
+            self.state[const.FRAME] = 0
+            self.state[const.VELOCITY] = 0
+            self.state[const.VERTICAL_VELOCITY] = 0
+                    
     def update_state(self, game_state, game_world_state, raw_game_inputs):
         player_inputs = self.__parse_inputs(raw_game_inputs)
 
@@ -95,10 +103,11 @@ class GamePlayer(GameWorldEntity):
         self.__update_falling_state()
         self.__update_dive_state()
         self.__update_bonk_state()
+        self.__update_damage_state()
         self.__reset_jump_and_dive_flags()
 
-        self.apply_collision_detection(game_state)
-        
+        self.apply_platform_collision_detection(game_state)
+        self.apply_hazard_collision_detection(game_state)
 
     def update_controls(self, new_input_config):
         self.state[const.INPUT_CONFIG] = new_input_config
@@ -146,6 +155,16 @@ class GamePlayer(GameWorldEntity):
                 0
             )
 
+    def __update_damage_state(self):
+        if self.state[const.STATE] == const.DMG:
+            self.state[const.VELOCITY] = 0
+            self.state[const.VERTICAL_VELOCITY] = 0
+            if self.state[const.FRAME] >= self.state[const.DMGFR]:
+                self.state[const.X_COORD], self.state[const.Y_COORD] = self.state[const.SPAWN]
+                self.state[const.STATE] = const.IDLE
+                self.state[const.FRAME] = 0
+
+    
     def __update_motion_state(self):
         player_motion_state = self.state[const.STATE]
         motion_state_handlers = self.motion_state_handlers.get(player_motion_state)
