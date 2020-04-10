@@ -42,7 +42,7 @@ class GamePlayer(GameWorldEntity):
             const.RUN: self.__apply_run_state,
             const.LAND: self.__apply_land_state,
         }
-
+        
     def apply_platform_collision_detection(self, game_state):
         # checks if we are moving
         xflag = abs(self.state[const.VELOCITY]) > 0

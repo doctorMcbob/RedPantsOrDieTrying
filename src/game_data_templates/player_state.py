@@ -1,7 +1,6 @@
 from src.const import GameConstants as const
 
 PLAYER_STATE_TEMPLATE = {
-    const.SPAWN: (0, 0),
     const.X_COORD: 0,
     const.Y_COORD: 0,
     const.VELOCITY: 0,

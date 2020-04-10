@@ -63,6 +63,7 @@ except IOError:
     print("Could not load level, starting fresh")
     
     LEVEL = {
+        const.SPAWN: (0, 0),
         const.PLATFORMS: [],
         const.ENEMIES: [],
         const.SPIKES: [],
@@ -72,6 +73,7 @@ def save():
     filename = input("Save as (blank for NO SAVE)\n> ")
     if not filename: return
     level = {
+        "SPAWN": LEVEL[const.SPAWN],
         "PLATS": LEVEL[const.PLATFORMS],
         "ENEMIES": LEVEL[const.ENEMIES],
         "SPIKES": LEVEL[const.SPIKES],
@@ -114,7 +116,17 @@ def get_surface(level):
         surface.fill([(100, 100, 100), (200, 100, 100), (100, 200, 100), (100, 100, 200)][plat[4]])
         surface.blit(font.render("Platform", 0, (0, 0, 0)), (0, 0))
         surf.blit(surface, (plat[0] - xscroll , plat[1] - yscroll))
+    for spike in level[const.SPIKES]:
+        surface = Surface((32, 32))
+        surface.fill((255, 100, 100))
+        surface.blit(font.render("Spike", 0, (0, 0, 0)), (0, 0))
+        surf.blit(surface, (spike[0] - xscroll , spike[1] - yscroll))
     if CORNER is not None: surf.blit(font.render("C", 0, (0, 0, 0)), (CORNER[0]-xscroll, CORNER[1]-yscroll))
+
+    spwn = Surface((64, 64))
+    spwn.fill((0, 255, 0))
+    surf.blit(spwn, (LEVEL[const.SPAWN][0] - xscroll , LEVEL[const.SPAWN][1] - yscroll))
+    
     return surf
 
 def draw_cursor():
@@ -126,6 +138,9 @@ def draw_cursor():
         (GAME_STATE[const.WIDTH] // 2 + 32, GAME_STATE[const.HEIGHT] // 2), 2)
 
 
+def make_spike(level):
+    level[const.SPIKES].append([CURSOR[0], CURSOR[1], 0])
+    
 def make_platform(level):
     global CORNER
     if CORNER is None:
@@ -150,6 +165,8 @@ def alt_main_loop(game_state):
     GAME_WORLD = GameWorld(GAME_WORLD_STATE_TEMPLATE)
     GAME_SYSTEM_INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
     GAME_PLAYER_ONE.initialize()
+    GAME_PLAYER_ONE.state[const.SPAWN] = game_state[const.LEVEL][const.SPAWN]
+    GAME_PLAYER_ONE.state[const.X_COORD], GAME_PLAYER_ONE.state[const.Y_COORD] = GAME_PLAYER_ONE.state[const.SPAWN]
 
     while True:
         game_state[const.GAME_CLOCK].tick(30)
@@ -178,7 +195,9 @@ while True:
             if e.key == K_DOWN: CURSOR[1] += 32
 
             if e.key == K_SPACE: make_platform(LEVEL)
-
+            if e.key == K_p: LEVEL[const.SPAWN] = tuple(CURSOR)
+            if e.key == K_s: make_spike(LEVEL)
+            
             if e.key == K_s and pygame.key.get_mods() & KMOD_CTRL: save()
             if e.key == K_RETURN:
                 GAME_STATE = reset_game_state()
