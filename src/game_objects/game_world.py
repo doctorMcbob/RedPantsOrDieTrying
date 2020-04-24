@@ -35,12 +35,21 @@ class GameWorld(GameObject):
 
         game_world_surface.fill((255, 255, 255)) #draw background -- later
 
+        # right now, platforms and spikes are static, 
+        # eventually more complex game objects will handle their own sprite sheets
+        
         for plat in game_state[const.LEVEL][const.PLATFORMS]:
             platform_surface = self.__get_platform_surface(game_state, plat)
             platform_position = self.__get_board_position(plat[0], plat[1])
 
             game_world_surface.blit(platform_surface, platform_position)
 
+        for spike in game_state[const.LEVEL][const.SPIKES]:
+            spike_surface = self.__get_spike_surface(game_state, spike)
+            spike_position = self.__get_board_position(spike[0], spike[1])
+
+            game_world_surface.blit(spike_surface, spike_position)
+        
         self.__draw_player(game_state, game_world_surface, player_one)
 
         return game_world_surface
@@ -52,11 +61,22 @@ class GameWorld(GameObject):
         return (x_pos + scroll_state[0], y_pos + scroll_state[1])
 
     def __get_platform_surface(self, game_state, plat):
+        # placeholder
         font = game_state[const.FONTS][const.FONT_HELVETICA]
         surface = Surface((plat[2], plat[3]))
 
         surface.fill([(100, 100, 100), (200, 100, 100), (100, 200, 100), (100, 100, 200)][plat[4]])
         surface.blit(font.render("Platform", 0, (0, 0, 0)), (0, 0))
+
+        return surface
+
+    def __get_spike_surface(self, game_state, spike):
+        # placeholder
+        font = game_state[const.FONTS][const.FONT_HELVETICA]
+        surface = Surface((32, 32))
+
+        surface.fill((255, 100, 100))
+        surface.blit(font.render("Spike", 0, (0, 0, 0)), (0, 0))
 
         return surface
 

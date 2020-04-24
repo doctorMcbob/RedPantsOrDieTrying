@@ -53,7 +53,8 @@ def init_game(game_state):
     pygame.display.set_caption("lookin good")
 
     GAME_PLAYER_ONE.initialize()
-
+    GAME_PLAYER_ONE.state[const.SPAWN] = game_state[const.LEVEL][const.SPAWN]
+    GAME_PLAYER_ONE.state[const.X_COORD], GAME_PLAYER_ONE.state[const.Y_COORD] = GAME_PLAYER_ONE.state[const.SPAWN]
     return game_state
 
 def draw_screen(game_state, game_world_surface):

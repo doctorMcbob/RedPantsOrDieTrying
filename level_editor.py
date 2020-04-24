@@ -55,6 +55,12 @@ from src.game_data_templates.input_config import (
 )
 
 pygame.init()
+HEL32 = pygame.font.SysFont("Helvetica", 32)
+
+STATIC_OBJ_TEXT_KEY = {
+    const.PLATFORMS: ["X", "Y", "Width", "Height", "image idx"],
+    const.SPIKES: ["X", "Y", "direction"],
+}
 
 # try to load level from command line
 try:
@@ -63,15 +69,34 @@ except IOError:
     print("Could not load level, starting fresh")
     
     LEVEL = {
+        const.SPAWN: (0, 0),
         const.PLATFORMS: [],
         const.ENEMIES: [],
         const.SPIKES: [],
     }
 
+def submenu(objtype, index):
+    obj = LEVEL[objtype][index]
+    inmenu = True
+    while inmenu:
+        surf = Surface((480, 126 + 32 * len(obj)))
+        surf.fill((100, 255, 100))
+        for i, name in enumerate(STATIC_OBJ_TEXT_KEY[objtype] + ["move", "delete"]):
+            surf.blit(HEL32.render(name, 0, (0, 0, 0)), (32, 32 + (i * 32)))
+            if i < len(obj): surf.blit(HEL32.render(str(obj[i]), 0, (0, 0, 0)), (256, 32 + (i * 32)))
+        GAME_STATE[const.SCREEN].blit(surf, (126, 64))
+
+        for e in pygame.event.get():
+            if e.type == QUIT: quit()
+            if e.type == KEYDOWN and e.key == K_ESCAPE: inmenu = False
+        pygame.display.update()
+
+
 def save():
     filename = input("Save as (blank for NO SAVE)\n> ")
     if not filename: return
     level = {
+        "SPAWN": LEVEL[const.SPAWN],
         "PLATS": LEVEL[const.PLATFORMS],
         "ENEMIES": LEVEL[const.ENEMIES],
         "SPIKES": LEVEL[const.SPIKES],
@@ -81,7 +106,7 @@ def save():
 
 
 def reset_game_state():
-    GAME_STATE = GAME_STATE_TEMPLATE.copy()            
+    GAME_STATE = GAME_STATE_TEMPLATE.copy()
     GAME_STATE[const.SCREEN] = pygame.display.set_mode((
         GAME_STATE[const.WIDTH],
         GAME_STATE[const.HEIGHT]
@@ -114,7 +139,18 @@ def get_surface(level):
         surface.fill([(100, 100, 100), (200, 100, 100), (100, 200, 100), (100, 100, 200)][plat[4]])
         surface.blit(font.render("Platform", 0, (0, 0, 0)), (0, 0))
         surf.blit(surface, (plat[0] - xscroll , plat[1] - yscroll))
+    for spike in level[const.SPIKES]:
+        surface = Surface((32, 32))
+        surface.fill((255, 100, 100))
+        surface.blit(font.render("Spike", 0, (0, 0, 0)
+        ), (0, 0))
+        surf.blit(surface, (spike[0] - xscroll , spike[1] - yscroll))
     if CORNER is not None: surf.blit(font.render("C", 0, (0, 0, 0)), (CORNER[0]-xscroll, CORNER[1]-yscroll))
+
+    spwn = Surface((64, 64))
+    spwn.fill((0, 255, 0))
+    surf.blit(spwn, (LEVEL[const.SPAWN][0] - xscroll , LEVEL[const.SPAWN][1] - yscroll))
+    
     return surf
 
 def draw_cursor():
@@ -126,6 +162,9 @@ def draw_cursor():
         (GAME_STATE[const.WIDTH] // 2 + 32, GAME_STATE[const.HEIGHT] // 2), 2)
 
 
+def make_spike(level):
+    level[const.SPIKES].append([CURSOR[0], CURSOR[1], 0])
+    
 def make_platform(level):
     global CORNER
     if CORNER is None:
@@ -150,6 +189,8 @@ def alt_main_loop(game_state):
     GAME_WORLD = GameWorld(GAME_WORLD_STATE_TEMPLATE)
     GAME_SYSTEM_INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
     GAME_PLAYER_ONE.initialize()
+    GAME_PLAYER_ONE.state[const.SPAWN] = game_state[const.LEVEL][const.SPAWN]
+    GAME_PLAYER_ONE.state[const.X_COORD], GAME_PLAYER_ONE.state[const.Y_COORD] = GAME_PLAYER_ONE.state[const.SPAWN]
 
     while True:
         game_state[const.GAME_CLOCK].tick(30)
@@ -177,12 +218,22 @@ while True:
             if e.key == K_UP: CURSOR[1] -= 32
             if e.key == K_DOWN: CURSOR[1] += 32
 
-            if e.key == K_SPACE: make_platform(LEVEL)
+            if e.key == K_p: make_platform(LEVEL)
+            if e.key == K_r: LEVEL[const.SPAWN] = tuple(CURSOR)
+            if e.key == K_s: make_spike(LEVEL)
+
+            if e.key == K_SPACE:
+                hitbox = pygame.Rect(tuple(CURSOR), (32, 32))
+                i = hitbox.collidelist([Rect((plat[0], plat[1]), (plat[2], plat[3])) for plat in LEVEL[const.PLATFORMS]])
+                if i != -1: submenu(const.PLATFORMS, i)
+                i = hitbox.collidelist([Rect((spike[0], spike[1]), (32, 32)) for spike in LEVEL[const.SPIKES]])
+                if i != -1: submenu(const.SPIKES, i)
 
             if e.key == K_s and pygame.key.get_mods() & KMOD_CTRL: save()
             if e.key == K_RETURN:
                 GAME_STATE = reset_game_state()
                 alt_main_loop(GAME_STATE)
+
     GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
     draw_cursor()
     pygame.display.update()
