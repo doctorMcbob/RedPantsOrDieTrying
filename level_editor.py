@@ -46,10 +46,14 @@ from src.lib import utils
 from src.lib.input_manager import input_interpreter
 from src.game_objects.game_player import GamePlayer
 from src.game_objects.game_world import GameWorld
+from src.game_objects.game_actor import GameActor
 from src.game_data_templates.player_state import PLAYER_STATE_TEMPLATE
 from src.game_data_templates.game_world_state import GAME_WORLD_STATE_TEMPLATE
 from src.game_data_templates.game_player_hitbox_config import GAME_PLAYER_HITBOX_CONFIG
-
+from src.game_data_templates.actor_templates import (
+    MOVING_PLATFORM_TEMPLATE,
+    moving_platform_update_function,
+)
 from src.game_data_templates.input_config import (
     INPUT_CONFIG_TEMPLATE,
 )
@@ -66,6 +70,7 @@ except IOError:
         const.PLATFORMS: [],
         const.ENEMIES: [],
         const.SPIKES: [],
+        const.ACTORS: [],
     }
 
 def save():
@@ -75,6 +80,7 @@ def save():
         "PLATS": LEVEL[const.PLATFORMS],
         "ENEMIES": LEVEL[const.ENEMIES],
         "SPIKES": LEVEL[const.SPIKES],
+        "ACTORS": LEVEL[const.ACTORS],
     }
     with open(path_to_levels / filename, "w") as f:
         f.write(repr(level))
