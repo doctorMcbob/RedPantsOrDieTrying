@@ -15,4 +15,5 @@ def load_level(filename):
         const.PLATFORMS: level_data["PLATS"],
         const.ENEMIES: level_data["ENEMIES"],
         const.SPIKES: level_data["SPIKES"],
+        const.ACTORS: level_data["ACTORS"],
     }

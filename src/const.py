@@ -75,6 +75,9 @@ class GameConstants(Enum):
     PLAYER_ONE_SPRITE_SHEET = "PLAYER_ONE_SPRITE_SHEET_KEY"
     WALLJUMPSTR = "WALLJUMPSTR"
     WALLJUMPFRM = "WALLJUMPFRM"
+    ACTORS = "ACTORS"
+    COUNTER = "COUNTER"
+    PATH = "PATH"
     # ----- states -----
     AIR = "AIR"
     SLIDE = "SLIDE"
