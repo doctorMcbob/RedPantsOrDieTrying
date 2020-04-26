@@ -26,4 +26,5 @@ PLAYER_STATE_TEMPLATE = {
     const.KICKFLIPLIMIT: -28,
     const.WALLJUMPSTR: 14,
     const.WALLJUMPFRM: 3,
+    const.DMGFR: 20,
 }

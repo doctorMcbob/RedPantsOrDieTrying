@@ -78,6 +78,8 @@ class GameConstants(Enum):
     ACTORS = "ACTORS"
     COUNTER = "COUNTER"
     PATH = "PATH"
+    SPAWN = "SPAWN"
+    DMGFR = "DMGFR"
     # ----- states -----
     AIR = "AIR"
     SLIDE = "SLIDE"
@@ -99,3 +101,4 @@ class GameConstants(Enum):
     KICKFLIP2 = "KICKFLIP2"
     WALL = "WALL"
     WALLJUMPSTART = "WALLJUMPSTART"
+    DMG = "DMG"

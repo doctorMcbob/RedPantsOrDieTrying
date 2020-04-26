@@ -45,9 +45,7 @@ class GameWorldEntity(GameObject):
         font = game_state[const.FONTS][const.FONT_HELVETICA]
 
         draft.blit(font.render(game_state_string, 0, (0, 0, 0)), (0, 0))
-
         return draft
-        #raise IndexError("no sprite found for player "+self.state[STATE])
 
     def update_movement_velocity(self, game_state, game_world_state):
         self.state[const.X_COORD] += self.state[const.VELOCITY]
@@ -58,7 +56,7 @@ class GameWorldEntity(GameObject):
         self.state[const.HITBOX] = self.state[const.HITBOX_CONFIG][self.state[const.STATE]]
 
 
-    def apply_collision_detection(self, game_state):
+    def apply_platform_collision_detection(self, game_state):
         hitbox_pos, hitbox_size = self.state[const.HITBOX_CONFIG].get(self.state[const.STATE])
         self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
 
@@ -116,3 +114,14 @@ class GameWorldEntity(GameObject):
             self.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
             self.state[const.VERTICAL_VELOCITY] = 0
             self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
+
+
+    def apply_hazard_collision_detection(self, game_state):
+        hitbox_pos, hitbox_size = self.state[const.HITBOX_CONFIG].get(self.state[const.STATE])
+        self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
+
+        spikes = [Rect((x, y), (32, 32)) for x, y, d in game_state[const.LEVEL][const.SPIKES]]
+
+        return self.state[const.HITBOX].collidelist(spikes) is not -1
+
+        
