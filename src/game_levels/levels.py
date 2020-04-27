@@ -11,6 +11,13 @@ path_to_levels = Path('.') / "src/game_levels/bin/"
 def load_level(filename):
     with open(path_to_levels / filename, "r") as f:
         level_data = eval(f.read())
+    
+    for key in level_data.keys():
+        if key is not 'SPAWN':
+            for i, item in enumerate(level_data[key]):
+                if type(item) == tuple:
+                    level_data[key][i] = list(item)
+
     return {
         const.SPAWN: level_data["SPAWN"],
         const.PLATFORMS: level_data["PLATS"],
