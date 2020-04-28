@@ -80,6 +80,10 @@ class GameConstants(Enum):
     PATH = "PATH"
     SPAWN = "SPAWN"
     DMGFR = "DMGFR"
+    NAME = "NAME"
+    LOADED_ACTORS = "LOADED_ACTORS"
+    TRAITS = "TRAITS"
+    TANGIBLE = "TANGIBLE"
     # ----- states -----
     AIR = "AIR"
     SLIDE = "SLIDE"

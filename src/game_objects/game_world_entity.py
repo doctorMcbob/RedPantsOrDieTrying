@@ -22,50 +22,61 @@ class GameWorldEntity(GameObject):
         self.state[const.SPRITE_SHEET] = load_sprite_sheet(self.state[const.SPRITE_SHEET_KEY])
 
     def get_surface(self, game_state):
-        game_state_string = self.state[const.STATE].value
-        sprites = self.state[const.SPRITE_SHEET]
+        if const.SPRITE_SHEET in self.state:
+            game_state_string = self.state[const.STATE].value
+            sprites = self.state[const.SPRITE_SHEET]
 
-        if game_state_string in sprites.keys():
-            return sprites[game_state_string]
+            if game_state_string in sprites.keys():
+                return sprites[game_state_string]
 
-        game_frame = self.state[const.FRAME]
+            game_frame = self.state[const.FRAME]
 
-        while game_frame >= 0:
-            current_frame = game_state_string + ":" + str(game_frame)
+            while game_frame >= 0:
+                current_frame = game_state_string + ":" + str(game_frame)
 
-            if current_frame in sprites:
-                return sprites[current_frame]
+                if current_frame in sprites:
+                    return sprites[current_frame]
 
-            game_frame -= 1
+                game_frame -= 1
+                
+        else:
+            game_state_string = self.state[const.NAME]
 
-        draft = Surface((64, 64))
-
+        draft = Surface((self.state[const.WIDTH], self.state[const.HEIGHT]))
+        
         draft.fill((0, 255, 0))
 
         font = game_state[const.FONTS][const.FONT_HELVETICA]
-
+        
         draft.blit(font.render(game_state_string, 0, (0, 0, 0)), (0, 0))
         return draft
 
     def update_movement_velocity(self, game_state, game_world_state):
         self.state[const.X_COORD] += self.state[const.VELOCITY]
         self.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
-        self.state[const.VERTICAL_VELOCITY] += game_world_state[const.GRAVITY]
+        if const.TRAITS not in self.state or const.GRAVITY.value in self.state[const.TRAITS]:
+            self.state[const.VERTICAL_VELOCITY] += game_world_state[const.GRAVITY]
 
     def update_hitbox(self):
         self.state[const.HITBOX] = self.state[const.HITBOX_CONFIG][self.state[const.STATE]]
 
 
     def apply_platform_collision_detection(self, game_state):
-        hitbox_pos, hitbox_size = self.state[const.HITBOX_CONFIG].get(self.state[const.STATE])
+        if self.state[const.STATE] in self.state[const.HITBOX_CONFIG]:
+            hitbox_pos, hitbox_size = self.state[const.HITBOX_CONFIG].get(self.state[const.STATE])
+        else:
+            hitbox_pos = (self.state[const.X_COORD], self.state[const.Y_COORD])
+            hitbox_size = (self.state[const.WIDTH], self.state[const.HEIGHT])
         self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
 
+        actor_map = list(filter(lambda actor: 'TANGIBLE' in actor.state[const.TRAITS], game_state[const.LOADED_ACTORS]))
         plats = [Rect((x, y), (w, h)) for x, y, w, h, idx in game_state[const.LEVEL][const.PLATFORMS]]
-
+        tangibles = [Rect((actor.state[const.X_COORD], actor.state[const.Y_COORD]), (actor.state[const.WIDTH], actor.state[const.HEIGHT]))
+                     for actor in filter(lambda actor: 'TANGIBLE' in actor.state[const.TRAITS], game_state[const.LOADED_ACTORS])]
         # this flag checks for a broken state where the player starts overlapped with a platform
-        brokeflag = self.state[const.HITBOX].collidelist(plats) != -1
+        brokeflag = self.state[const.HITBOX].collidelist(tangibles) != -1
         xflag, yflag = False, False
-        
+        actor = None
         # X axis
         if self.state[const.VELOCITY]:
             direction = 1 if self.state[const.VELOCITY] < 0 else -1
@@ -74,6 +85,12 @@ class GameWorldEntity(GameObject):
             while self.state[const.HITBOX].move(self.state[const.VELOCITY], 0).collidelist(plats) != -1:
                 xflag = True
                 self.state[const.VELOCITY] += direction
+
+            i = self.state[const.HITBOX].move(self.state[const.VELOCITY], 0).collidelist(tangibles)
+            while self.state[const.HITBOX].move(self.state[const.VELOCITY], 0).collidelist(tangibles) != -1:
+                xflag = True
+                self.state[const.VELOCITY] += direction
+            if i != -1: actor_map[i].collision_function(actor_map[i], game_state, self)  
 
             # if the player is overlapped with a platform then the last bit will have left the x velocity
             # leaving the player right outside the platform. so shift the player by that much and set x velocity to 0
@@ -92,6 +109,12 @@ class GameWorldEntity(GameObject):
                 yflag = True
                 self.state[const.VERTICAL_VELOCITY] += direction
 
+            i = self.state[const.HITBOX].move(0, self.state[const.VERTICAL_VELOCITY]).collidelist(tangibles)
+            while self.state[const.HITBOX].move(0, self.state[const.VERTICAL_VELOCITY]).collidelist(tangibles) != -1:
+                yflag = True
+                self.state[const.VERTICAL_VELOCITY] += direction
+            if i != -1: actor_map[i].collision_function(actor_map[i], game_state, self)
+            
             # same as above but for Y axis
             if brokeflag and self.state[const.VERTICAL_VELOCITY]:
                 self.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]

@@ -5,7 +5,7 @@ from src.const import GameConstants as const
 from src.game_objects.game_world_entity import GameWorldEntity
 
 class GameActor(GameWorldEntity):
-    def __init__(self, state_template, sprite_key, hitbox_congfig, triggers, update_function=False, collision_function=False):
+    def __init__(self, state_template, sprite_key, hitbox_config, triggers, update_function=False, collision_function=False):
         """
         trigger data:
          { ((x offset, y offset), (w, h)) : function... }
@@ -18,9 +18,9 @@ class GameActor(GameWorldEntity):
         for offset, dimensions in triggers.keys():
             self.TRIGGERS.append([Rect(self.state[const.X_COORD] + offset[0], self.state[const.Y_COORD] + offset[1])])
             self.TRIGGER_MAP.append()
-        def off(self): pass
-        update_function = update_function or off
-        collision_function = collision_function or off
+        def off(*args): pass
+        self.update_function = update_function or off
+        self.collision_function = collision_function or off
 
     def check_triggers(self, player):
         triggers = list(self.TRIGGER_MAP.keys())
