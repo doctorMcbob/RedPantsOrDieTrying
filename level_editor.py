@@ -232,6 +232,9 @@ def get_numeric_input(pos):
                 if e.key == K_7: num += '7'
                 if e.key == K_8: num += '8'
                 if e.key == K_9: num += '9'
+                if e.key == K_MINUS:
+                    if num.startswith("-"): num = num[1:]
+                    else: num = "-" + num
 
                 if e.key in [K_SPACE, K_RETURN]: return bool(num) and int(num)
         surf = Surface((64, 16))
@@ -332,6 +335,7 @@ def submenu(game_state, name):
             menu = Surface((640 - 32, max(len(LEVEL[name][selected]) * 16, 400)))
             menu.fill((200, 200, 200))
             if type(LEVEL[name][selected]) != dict:
+                keys = list(LEVEL[name][selected])
                 CURSOR[0] = LEVEL[name][selected][0]
                 CURSOR[1] = LEVEL[name][selected][1]
                 for i, data in enumerate(list(LEVEL[name][selected]) + ["move", "delete"]):
@@ -355,8 +359,8 @@ def submenu(game_state, name):
                 if e.type == QUIT: quit()
                 if e.type == KEYDOWN:
                     if e.key == K_ESCAPE: objmenu = False
-                    if e.key == K_DOWN: selected2 = (selected2 + 1) % (len(LEVEL[name][selected].keys()) + 2)
-                    if e.key == K_UP: selected2 = (selected2 - 1) % (len(LEVEL[name][selected].keys()) + 2)
+                    if e.key == K_DOWN: selected2 = (selected2 + 1) % (len(keys) + 2)
+                    if e.key == K_UP: selected2 = (selected2 - 1) % (len(keys) + 2)
 
                     if e.key == K_LEFT:
                         try:

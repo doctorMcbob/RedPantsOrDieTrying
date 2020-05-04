@@ -87,9 +87,6 @@ def print_game_states(game_state):
     for game_obj in GAME_OBJECT_LIST:
         game_obj.print_state()
 
-def update_actors(game_state):
-    for actor in game_state[const.LOADED_ACTORS]:
-        actor.update()
 
 def main_loop(game_state):
     while True:
