@@ -209,7 +209,7 @@ class GamePlayer(GameWorldEntity):
         is_walljumping = self.state[const.STATE] == const.WALLJUMPSTART and self.state[const.FRAME] >= self.state[const.WALLJUMPFRM]
 
         if is_walljumping:
-            self.state[const.VELOCITY] += self.state[const.DIRECTION] * -1 * self.state[const.WALLJUMPSTR]
+            self.state[const.VELOCITY] = self.state[const.DIRECTION] * -1 * self.state[const.WALLJUMPSTR]
             self.state[const.DIRECTION] *= -1
             self.state[const.VERTICAL_VELOCITY] = self.state[const.JUMP_SPEED]
         

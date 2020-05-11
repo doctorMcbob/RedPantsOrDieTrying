@@ -46,10 +46,11 @@ def responsive_collision(self, game_state, collider):
             if val is None or val > value:
                 val = value
                 idx = i
+
         if idx == 0: collider.state[const.Y_COORD] = hbox.bottom
-        if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height
+        if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height - 5
         if idx == 2: collider.state[const.X_COORD] = hbox.right
-        if idx == 3: collider.state[const.X_COORD] = hbox.left - cbox.width
+        if idx == 3: collider.state[const.X_COORD] = hbox.left - 64
     else:
         collider.state[const.X_COORD] += self.state[const.VELOCITY]
         collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
