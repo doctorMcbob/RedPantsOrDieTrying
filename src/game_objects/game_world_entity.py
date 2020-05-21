@@ -38,11 +38,14 @@ class GameWorldEntity(GameObject):
                     return sprites[current_frame]
 
                 game_frame -= 1
-                
-        else:
-            game_state_string = self.state[const.NAME]
+            
 
-        draft = Surface((self.state[const.WIDTH], self.state[const.HEIGHT]))
+        
+        game_state_string = self.state[const.NAME]
+        
+        draft = Surface((
+            self.state[const.WIDTH],
+            self.state[const.HEIGHT]))
         
         draft.fill((0, 255, 0))
 
@@ -68,19 +71,24 @@ class GameWorldEntity(GameObject):
             hitbox_size = (self.state[const.WIDTH], self.state[const.HEIGHT])
         self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
 
-        actor_map = list(filter(lambda actor: 'TANGIBLE' in actor.state[const.TRAITS], game_state[const.LOADED_ACTORS]))
-        if self in actor_map: actor_map.remove(self)
+        tang_map = list(filter(lambda actor: 'TANGIBLE' in actor.state[const.TRAITS], game_state[const.LOADED_ACTORS]))
+        if self in tang_map: tang_map.remove(self)
+        non_tang_map = list(filter(lambda actor: 'TANGIBLE' not in actor.state[const.TRAITS], game_state[const.LOADED_ACTORS]))
         plats = [Rect((x, y), (w, h)) for x, y, w, h, idx in game_state[const.LEVEL][const.PLATFORMS]]
         tangibles = [Rect((actor.state[const.X_COORD], actor.state[const.Y_COORD]),
                           (actor.state[const.WIDTH], actor.state[const.HEIGHT]))
-                     for actor in actor_map]
+                     for actor in tang_map]
+        non_tangibles = [Rect((actor.state[const.X_COORD], actor.state[const.Y_COORD]),
+                              (actor.state[const.WIDTH], actor.state[const.HEIGHT]))
+                         for actor in non_tang_map]
         # this flag checks for a broken state where the player starts overlapped with a platform
         brokeflag = self.state[const.HITBOX].collidelist(plats + tangibles) != -1
         xflag, yflag = False, False
         actor = None
         hit = self.state[const.HITBOX].collidelist(tangibles)
-        if hit != -1: actor_map[hit].collision_function(actor_map[hit], game_state, self)
-        
+        if hit != -1: tang_map[hit].collision_function(tang_map[hit], game_state, self)
+        hit = self.state[const.HITBOX].collidelist(non_tangibles)
+        if hit != -1: non_tang_map[hit].collision_function(non_tang_map[hit], game_state, self)
         
         # X axis
         if self.state[const.VELOCITY]:
@@ -107,7 +115,7 @@ class GameWorldEntity(GameObject):
 
             if i != -1:
                 xflag = True
-                actor_map[i].collision_function(actor_map[i], game_state, self)
+                tang_map[i].collision_function(tang_map[i], game_state, self)
             
         # Y axis
         if self.state[const.VERTICAL_VELOCITY]:
@@ -130,7 +138,7 @@ class GameWorldEntity(GameObject):
                 self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
             if i != -1:
                 yflag = True
-                actor_map[i].collision_function(actor_map[i], game_state, self)
+                tang_map[i].collision_function(tang_map[i], game_state, self)
 
         # bug in the corner
         if self.state[const.VELOCITY] and self.state[const.VERTICAL_VELOCITY]:

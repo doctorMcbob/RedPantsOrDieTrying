@@ -21,6 +21,17 @@ MOVING_PLATFORM_TEMPLATE = {
     const.PATH: [(const.X_COORD, const.Y_COORD)], # evaluated in level editor, when placing initially
 }
 
+TRAMPOLINE_TEMPLATE = {
+    const.STATE: "trampoline",
+    const.NAME: "Trampoline",
+    const.X_COORD: 0,
+    const.Y_COORD: 0,
+    const.WIDTH: 0,
+    const.HEIGHT: 0,
+    const.DIRECTION: 0, # vertical if true else horizontal
+    const.TRAITS: [],
+}
+
 def moving_platform_update_function(self, game_state, game_world_state):
     X, Y = round(self.state[const.X_COORD]), round(self.state[const.Y_COORD])
     X_, Y_ = self.state[const.PATH][self.state[const.COUNTER]]
@@ -48,7 +59,7 @@ def responsive_collision(self, game_state, collider):
                 idx = i
 
         if idx == 0: collider.state[const.Y_COORD] = hbox.bottom
-        if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height - 5
+        if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height - 5 # HACKY AF
         if idx == 2: collider.state[const.X_COORD] = hbox.right
         if idx == 3: collider.state[const.X_COORD] = hbox.left - 64
     else:
@@ -57,10 +68,20 @@ def responsive_collision(self, game_state, collider):
     collider.update_hitbox()
 
 
+def trampoline_collision_function(self, game_state, collider):
+    if self.state[const.DIRECTION]: collider.state[const.VELOCITY] *= -1
+    else: collider.state[const.VERTICAL_VELOCITY] *= -1
+
+
 ACTOR_FUNCTION_MAP = {
     "Moving Platform": {
         'template': MOVING_PLATFORM_TEMPLATE,
         'update': moving_platform_update_function,
         'collision': responsive_collision,
+    },
+    "Trampoline": {
+        'template': TRAMPOLINE_TEMPLATE,
+        'collision': trampoline_collision_function,
     }
 }
+

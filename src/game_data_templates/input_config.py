@@ -5,6 +5,8 @@
 This prevents pylint from blowing up when using imported locals globally
 @TODO find a better way to fix this
 """
+import sys
+
 from pygame.locals import (
     K_z,
     K_x,
@@ -40,3 +42,22 @@ INPUT_CONFIG_TEMPLATE = {
     const.BUTTON_D_KEY: K_d,
     const.BUTTON_N_KEY: K_n,
 }
+#
+#INPUT_JOY_COFIG_TEMPLATE = {
+#    # Basic Controls
+#    const.BUTTON_ONE: K_z,
+#    const.BUTTON_TWO: K_x,
+#     const.BUTTON_LEFT: K_LEFT,
+#     const.BUTTON_UP: K_UP,
+#     const.BUTTON_RIGHT: K_RIGHT,
+#     const.BUTTON_DOWN: K_DOWN,
+#     # Utility/State related keys (button press, button release, etc)
+#     const.BUTTON_PRESSED: JOYBUTTONDOWN,
+#     const.BUTTON_RELEASED: JOYBUTTONUP,
+#     const.AXIS_MOVEMENT: JOYAXISMOTION,
+#     const.BUTTON_QUIT: QUIT,
+#     const.BUTTON_ESCAPE: K_ESCAPE,
+#     # Character specific keybindings
+#     const.BUTTON_D_KEY: K_d,
+#     const.BUTTON_N_KEY: K_n,
+# }

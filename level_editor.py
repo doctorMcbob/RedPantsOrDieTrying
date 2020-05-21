@@ -289,7 +289,7 @@ def make_menu(name):
                 GAME_STATE[const.SCREEN].blit(surf, (256, 256))
                 if type(temp[key]) == int:
                     temp[key] = get_numeric_input((256 + 32, 256 + 32))
-                if type(temp[key]) == list and type(temp[key][0]) == tuple:
+                if type(temp[key]) == list and temp[key] and type(temp[key][0]) == tuple:
                     if len(temp[key]):
                         temp[key] = [tuple([n if n not in temp else temp[n] for n in tup]) for tup in temp[key]]
                     pos = choose_position()

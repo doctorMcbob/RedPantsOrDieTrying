@@ -1,0 +1,25 @@
+basic layout, completely subject to change
+
+small opening level
+  . just platforms and spikes
+  . to teach the basics of platforming
+
+main section
+  . start in middle
+  . explore outward
+  . each biome has a specific collectable
+     - gems in the cave, fruit in the jungle... ect
+  . each biome has a boss door needing some number of collectables
+     - maybe like 80% of the total
+  . each biome has different actors and mechanics
+  . 5(?) biomes
+     - cave   : jems
+     - jungle : fruit
+     - bank   : coins
+     - ...
+  . once all bosses are defeated path to the final level opens
+
+final stretch
+  . more or less linear
+  . has actors from all biomes
+  . ends with final boss
