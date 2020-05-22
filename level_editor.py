@@ -1,12 +1,15 @@
 """
 Level editor
 
-right now im just going for platforms
-check out the redpantsadventure repo to see what im going for [spaghetti warning]
-https://github.com/doctorMcbob/RedPantsAdventure/blob/master/leveleditor.py
+~~ TO DO LIST ~~
+[x] show cursor coordinates
+[x] show moving platform path
+ -- [x] during constructor 
+[] select objects through hit detection
+[] scrolling menus
+[] saving without terminal
+ -- [x] remember filename from commandline
 
-platforms:
-    (x, y, w, h, idx)
 """
 import pygame
 from pygame.locals import *
@@ -71,8 +74,10 @@ STATIC_OBJ_TEXT_KEY = {
 
 # try to load level from command line
 try:
-    LEVEL = load_level(sys.argv[-1])
+    FILENAME = sys.argv[-1]
+    LEVEL = load_level(FILENAME)
 except IOError:
+    FILENAME = False
     print("Could not load level, starting fresh")
     
     LEVEL = {
@@ -92,8 +97,8 @@ def savable(d):
     return new
         
     
-def save():
-    filename = input("Save as (blank for NO SAVE)\n> ")
+def save(FILENAME=False):
+    filename = FILENAME or input("Save as (blank for NO SAVE)\n> ")
     if not filename: return
     actors = []
     for i in range(len(LEVEL[const.ACTORS])):
@@ -160,6 +165,7 @@ def get_surface(level):
         surface.blit(font.render(actor[const.NAME], 0, (0, 0, 0)
         ), (0, 0))
         surf.blit(surface, (actor[const.X_COORD] - xscroll , actor[const.Y_COORD] - yscroll))
+        if actor[const.NAME] == "Moving Platform": draw_path(surf, actor[const.PATH])
     if CORNER is not None: surf.blit(font.render("C", 0, (0, 0, 0)), (CORNER[0]-xscroll, CORNER[1]-yscroll))
 
     spwn = Surface((64, 64))
@@ -168,6 +174,21 @@ def get_surface(level):
     
     return surf
 
+def draw_path(surf, path):
+    if not path: return
+    xscroll = CURSOR[0] - GAME_STATE[const.WIDTH] // 2
+    yscroll = CURSOR[1] - GAME_STATE[const.HEIGHT] // 2
+    for point in path:
+        point = int(point[0] - xscroll), int(point[1] - yscroll)
+        pygame.draw.circle(surf, (0, 180, 0), point, 5)
+    i = 0
+    while i + 1 < len(path):
+        p1 = path[i][0] - xscroll, path[i][1] - yscroll
+        p2 = path[(i + 1) % len(path)]
+        p2 = p2[0] - xscroll, p2[1] - yscroll
+        pygame.draw.line(surf, (0, 210, 0), p1, p2, 2)
+        i += 1
+
 def draw_cursor():
     pygame.draw.line(GAME_STATE[const.SCREEN], (255, 0, 0), 
         (GAME_STATE[const.WIDTH] // 2, GAME_STATE[const.HEIGHT] // 2),
@@ -175,7 +196,8 @@ def draw_cursor():
     pygame.draw.line(GAME_STATE[const.SCREEN], (255, 0, 0),
         (GAME_STATE[const.WIDTH] // 2, GAME_STATE[const.HEIGHT] // 2 + 32),
         (GAME_STATE[const.WIDTH] // 2 + 32, GAME_STATE[const.HEIGHT] // 2), 2)
-
+    GAME_STATE[const.SCREEN].blit(HEL16.render(str(int(CURSOR[0])) + ", " + str(int(CURSOR[1])), 0, (255, 0, 0)), (GAME_STATE[const.WIDTH] // 2, GAME_STATE[const.HEIGHT] // 2 + 32))
+    
 
 def make_spike(level):
     level[const.SPIKES].append([CURSOR[0], CURSOR[1], 0])
@@ -243,7 +265,7 @@ def get_numeric_input(pos):
         GAME_STATE[const.SCREEN].blit(surf, pos)
         pygame.display.update()
 
-def choose_position():
+def choose_position(path=None):
     while True:
         for e in pygame.event.get():
             if e.type == QUIT: quit()
@@ -260,8 +282,9 @@ def choose_position():
                     CURSOR[1] += 32
                 if e.key == K_UP:
                     CURSOR[1] -= 32
-    
+
         GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
+        if path: draw_path(GAME_STATE[const.SCREEN], path)
         draw_cursor()
         GAME_STATE[const.SCREEN].blit(HEL32.render(str(CURSOR), 0, (0 ,0, 0)), (0, 0))
         pygame.display.update()
@@ -295,7 +318,8 @@ def make_menu(name):
                     pos = choose_position()
                     while pos:
                         temp[key].append(pos)
-                        pos = choose_position()
+                        pygame.display.update()
+                        pos = choose_position(temp[key])
             temp[const.NAME] = actor
             LEVEL[const.ACTORS].append(temp)
 
@@ -358,6 +382,7 @@ def submenu(game_state, name):
             for e in pygame.event.get():
                 if e.type == QUIT: quit()
                 if e.type == KEYDOWN:
+                    mods = pygame.key.get_mods()
                     if e.key == K_ESCAPE: objmenu = False
                     if e.key == K_DOWN: selected2 = (selected2 + 1) % (len(keys) + 2)
                     if e.key == K_UP: selected2 = (selected2 - 1) % (len(keys) + 2)
@@ -365,17 +390,17 @@ def submenu(game_state, name):
                     if e.key == K_LEFT:
                         try:
                             if type(LEVEL[name][selected]) != dict:
-                                LEVEL[name][selected][selected2] = int(LEVEL[name][selected][selected2]) - 16
+                                LEVEL[name][selected][selected2] = int(LEVEL[name][selected][selected2]) - 1 - (15 * bool(mods & KMOD_LSHIFT))
                             else:
-                                LEVEL[name][selected][keys[selected2]] = int(LEVEL[name][selected][keys[selected2]]) - 16
+                                LEVEL[name][selected][keys[selected2]] = int(LEVEL[name][selected][keys[selected2]]) - 1 - (15 * bool(mods & KMOD_LSHIFT))
                         except TypeError: pass
                         except ValueError: pass
                     if e.key == K_RIGHT:
                         try:
                             if type(LEVEL[name][selected]) != dict:
-                                LEVEL[name][selected][selected2] = int(LEVEL[name][selected][selected2]) + 16
+                                LEVEL[name][selected][selected2] = int(LEVEL[name][selected][selected2]) + 1 + (15 * bool(mods & KMOD_LSHIFT)) 
                             else:
-                                LEVEL[name][selected][keys[selected2]] = int(LEVEL[name][selected][keys[selected2]]) + 16
+                                LEVEL[name][selected][keys[selected2]] = int(LEVEL[name][selected][keys[selected2]]) + 1 + (15 * bool(mods & KMOD_LSHIFT)) 
                         except TypeError: pass
                         except ValueError: pass
                     
@@ -460,7 +485,7 @@ while True:
                 if e.key == K_s: submenu(GAME_STATE, const.SPIKES)
                 if e.key == K_p: submenu(GAME_STATE, const.PLATFORMS)
                 if e.key == K_a: submenu(GAME_STATE, const.ACTORS)
-                if e.key == K_RETURN: save()
+                if e.key == K_RETURN: save(FILENAME)
             else:
                 if e.key == K_p: make_platform(LEVEL)
                 if e.key == K_r: LEVEL[const.SPAWN] = tuple(CURSOR)
