@@ -36,6 +36,14 @@ class GamePlayer(GameWorldEntity):
         )
 
         self.state[const.INPUT_CONFIG] = INPUT_CONFIG_TEMPLATE.copy()
+        # decided not to put this in the template
+        # because i dont want it to reset on death
+        self.inventory = {
+            "coin": 0,
+            "cheese": 0,
+            # ...
+        }
+        
         self.motion_state_handlers = {
             const.SLIDE: self.__apply_slide_state,
             const.IDLE: self.__apply_idle_state,

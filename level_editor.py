@@ -323,8 +323,13 @@ def make_menu(name):
             temp[const.NAME] = actor
             LEVEL[const.ACTORS].append(temp)
 
+def collision_select():
+    pass
 
 def submenu(game_state, name):
+    """
+    re write this whole thing
+    """
     inmenu = True
     selected = 0
     while inmenu:
@@ -481,6 +486,8 @@ while True:
             if e.key == K_UP: CURSOR[1] -= 32
             if e.key == K_DOWN: CURSOR[1] += 32
 
+            if e.key == K_SPACE: collision_select()
+            
             if pygame.key.get_mods() & KMOD_CTRL:
                 if e.key == K_s: submenu(GAME_STATE, const.SPIKES)
                 if e.key == K_p: submenu(GAME_STATE, const.PLATFORMS)

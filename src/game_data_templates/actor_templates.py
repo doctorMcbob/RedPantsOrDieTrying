@@ -1,3 +1,23 @@
+"""
+-- working on --
+[x] collectables
+[] timer "rings"
+
+-- Known bugs --
+[] Moving Platforms
+\   [] 'warp' glitch
+    ... happens when walking into a moving platform,
+        causes X axis collision with platform below player
+        warping the player to the end of the platform
+    [] 'stutter' when colliding with platform
+    ... not sure about solving this one
+[] Trampolines
+\   [] entering trampoline perpendicular to bounce direction
+    [] skipping past trampoline with high velocity
+    ... should be fixed in GameWorldEntity, same
+        bug appears with platforms
+
+"""
 import pygame
 from pygame.rect import Rect
 
@@ -29,6 +49,17 @@ TRAMPOLINE_TEMPLATE = {
     const.WIDTH: 0,
     const.HEIGHT: 0,
     const.DIRECTION: 0, # vertical if true else horizontal
+    const.TRAITS: [],
+}
+
+COLLECTABLE_TEMPLATE = {
+    # can be set to 'banana' or 'cheese' or whatever biome
+    const.STATE: "coin",
+    const.NAME: "Collectable",
+    const.X_COORD: 0,
+    const.Y_COORD: 0,
+    const.WIDTH: 32,
+    const.HEIGHT: 32,
     const.TRAITS: [],
 }
 
@@ -72,6 +103,9 @@ def trampoline_collision_function(self, game_state, collider):
     if self.state[const.DIRECTION]: collider.state[const.VELOCITY] *= -1
     else: collider.state[const.VERTICAL_VELOCITY] *= -1
 
+def collectable_collision_function(self, game_state, collider):
+    collider.inventory[self.state[const.STATE]] += 1
+    game_state[const.LOADED_ACTORS].remove(self)
 
 ACTOR_FUNCTION_MAP = {
     "Moving Platform": {
@@ -82,6 +116,9 @@ ACTOR_FUNCTION_MAP = {
     "Trampoline": {
         'template': TRAMPOLINE_TEMPLATE,
         'collision': trampoline_collision_function,
-    }
+    },
+    "Collectable": {
+        'template': COLLECTABLE_TEMPLATE,
+        'collision': collectable_collision_function,
+    }                
 }
-
