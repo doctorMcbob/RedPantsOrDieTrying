@@ -53,7 +53,7 @@ from src.game_objects.game_actor import GameActor
 from src.game_data_templates.player_state import PLAYER_STATE_TEMPLATE
 from src.game_data_templates.game_world_state import GAME_WORLD_STATE_TEMPLATE
 from src.game_data_templates.game_player_hitbox_config import GAME_PLAYER_HITBOX_CONFIG
-from src.game_data_templates.actor_templates import ACTOR_FUNCTION_MAP
+from src.game_data_templates.actor_templates import ACTOR_FUNCTION_MAP, COLLECTABLE_TEMPLATE
 from src.game_data_templates.input_config import (
     INPUT_CONFIG_TEMPLATE,
 )
@@ -216,6 +216,12 @@ def make_platform(level):
 
     CORNER = None
 
+def make_collectable(level):
+    template = COLLECTABLE_TEMPLATE.copy()
+    template[const.X_COORD] = CURSOR[0]
+    template[const.Y_COORD] = CURSOR[1]
+    level[const.ACTORS].append(template)
+
 def select_from_list(l, pos, dim):
     selected = 0
     while True:
@@ -328,7 +334,7 @@ def collision_select():
 
 def submenu(game_state, name):
     """
-    re write this whole thing
+    FUCK this whole thing lmao
     """
     inmenu = True
     selected = 0
@@ -497,6 +503,7 @@ while True:
                 if e.key == K_p: make_platform(LEVEL)
                 if e.key == K_r: LEVEL[const.SPAWN] = tuple(CURSOR)
                 if e.key == K_s: make_spike(LEVEL)
+                if e.key == K_c: make_collectable(LEVEL)
                 if e.key == K_RETURN:
                     GAME_STATE = reset_game_state()
                     alt_main_loop(GAME_STATE)

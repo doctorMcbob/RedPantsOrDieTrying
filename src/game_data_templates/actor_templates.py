@@ -2,6 +2,7 @@
 -- working on --
 [x] collectables
 [] timer "rings"
+[] doors
 
 -- Known bugs --
 [] Moving Platforms
@@ -63,6 +64,20 @@ COLLECTABLE_TEMPLATE = {
     const.TRAITS: [],
 }
 
+TIMER_RINGS_TEMPLATE = {
+    const.STATE: "ring",
+    const.NAME: "Ring",
+    const.COUNTER: 0,
+    const.TIMER: 100,
+    const.IDX: 0,
+    const.X_COORD: 0,
+    const.Y_COORD: 0,
+    const.WIDTH: 32,
+    const.HEIGHT: 128,
+    const.PATH: [(const.X_COORD, const.Y_COORD)],
+    const.TRAITS: [],
+}
+
 def moving_platform_update_function(self, game_state, game_world_state):
     X, Y = round(self.state[const.X_COORD]), round(self.state[const.Y_COORD])
     X_, Y_ = self.state[const.PATH][self.state[const.COUNTER]]
@@ -92,11 +107,12 @@ def responsive_collision(self, game_state, collider):
         if idx == 0: collider.state[const.Y_COORD] = hbox.bottom
         if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height - 5 # HACKY AF
         if idx == 2: collider.state[const.X_COORD] = hbox.right
-        if idx == 3: collider.state[const.X_COORD] = hbox.left - 64
+        if idx == 3: collider.state[const.X_COORD] = hbox.left - cbox.width
     else:
         collider.state[const.X_COORD] += self.state[const.VELOCITY]
         collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
     collider.update_hitbox()
+    print(collider.state[const.X_COORD], collider.state[const.Y_COORD])
 
 
 def trampoline_collision_function(self, game_state, collider):
@@ -104,8 +120,30 @@ def trampoline_collision_function(self, game_state, collider):
     else: collider.state[const.VERTICAL_VELOCITY] *= -1
 
 def collectable_collision_function(self, game_state, collider):
-    collider.inventory[self.state[const.STATE]] += 1
+    if self.state[const.STATE] in collider.inventory:
+        collider.inventory[self.state[const.STATE]] += 1
+    else:
+        collider.inventory[self.state[const.STATE]] = 1
     game_state[const.LOADED_ACTORS].remove(self)
+
+def timer_rings_update_function(self, game_state, game_world_state):
+    
+    if self.state[const.IDX] >= len(self.state[const.PATH]):
+        # Figure out what to put here
+        print("ZOINKS SCOOB")
+        game_state[const.LOADED_ACTORS].remove(self)
+        return
+
+    self.state[const.X_COORD], self.state[const.Y_COORD] = self.state[const.PATH][self.state[const.IDX]]
+    if self.state[const.IDX] != 0:
+        self.state[const.COUNTER] -= 1
+    if self.state[const.COUNTER] <= 0:
+        self.state[const.IDX] = 0
+        self.state[const.COUNTER] = self.state[const.TIMER]
+
+def timer_rings_collision_function(self, game_state, collider):
+    self.state[const.COUNTER] = self.state[const.TIMER]
+    self.state[const.IDX] += 1
 
 ACTOR_FUNCTION_MAP = {
     "Moving Platform": {
@@ -120,5 +158,10 @@ ACTOR_FUNCTION_MAP = {
     "Collectable": {
         'template': COLLECTABLE_TEMPLATE,
         'collision': collectable_collision_function,
-    }                
+    },
+    "Timer Rings": {
+        'template': TIMER_RINGS_TEMPLATE,
+        'update': timer_rings_update_function,
+        'collision': timer_rings_collision_function,
+    },
 }

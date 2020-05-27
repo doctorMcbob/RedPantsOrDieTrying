@@ -84,6 +84,8 @@ class GameConstants(Enum):
     LOADED_ACTORS = "LOADED_ACTORS"
     TRAITS = "TRAITS"
     TANGIBLE = "TANGIBLE"
+    TIMER = "TIMER"
+    IDX = "IDX"
     # ----- states -----
     AIR = "AIR"
     SLIDE = "SLIDE"

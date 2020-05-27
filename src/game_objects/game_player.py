@@ -299,7 +299,9 @@ class GamePlayer(GameWorldEntity):
 
         if is_bonking:
             self.state[const.VELOCITY] = -10 * self.state[const.DIRECTION]
-
+        elif self.state[const.STATE] == const.BONK:
+            self.state[const.VELOCITY] = -2 * self.state[const.DIRECTION]
+        
         has_bonked = self.state[const.STATE] == const.BONKLAND and self.state[const.FRAME] >= self.state[const.BONKLF]
 
         if has_bonked:
