@@ -22,6 +22,10 @@ class GameWorld(GameObject):
         scroll_state = self.state[const.SCROLL]
         player_one_x = player_one_state[const.X_COORD]
         player_one_y = player_one_state[const.Y_COORD]
+
+        for actor in game_state[const.LOADED_ACTORS]:
+            actor.update_function(actor, game_state, self.state)
+        
         board_width = game_state[const.WIDTH]
         board_height = game_state[const.HEIGHT]
 
@@ -49,6 +53,12 @@ class GameWorld(GameObject):
             spike_position = self.__get_board_position(spike[0], spike[1])
 
             game_world_surface.blit(spike_surface, spike_position)
+
+        for actor in game_state[const.LOADED_ACTORS]:
+            actor_surface = actor.get_surface(game_state)
+            actor_position = self.__get_board_position(actor.state[const.X_COORD], actor.state[const.Y_COORD])
+
+            game_world_surface.blit(actor_surface, actor_position)
         
         self.__draw_player(game_state, game_world_surface, player_one)
 

@@ -36,6 +36,14 @@ class GamePlayer(GameWorldEntity):
         )
 
         self.state[const.INPUT_CONFIG] = INPUT_CONFIG_TEMPLATE.copy()
+        # decided not to put this in the template
+        # because i dont want it to reset on death
+        self.inventory = {
+            "coin": 0,
+            "cheese": 0,
+            # ...
+        }
+        
         self.motion_state_handlers = {
             const.SLIDE: self.__apply_slide_state,
             const.IDLE: self.__apply_idle_state,
@@ -291,7 +299,9 @@ class GamePlayer(GameWorldEntity):
 
         if is_bonking:
             self.state[const.VELOCITY] = -10 * self.state[const.DIRECTION]
-
+        elif self.state[const.STATE] == const.BONK:
+            self.state[const.VELOCITY] = -2 * self.state[const.DIRECTION]
+        
         has_bonked = self.state[const.STATE] == const.BONKLAND and self.state[const.FRAME] >= self.state[const.BONKLF]
 
         if has_bonked:

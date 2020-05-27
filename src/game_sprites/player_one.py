@@ -32,6 +32,7 @@ DEFAULT_SPRITE_CONFIG = {
         "WALL": ((1728, 0), (64, 64)),
         "WALLJUMPSTART:0": ((1792, 0), (64, 64)),
         "WALLJUMPSTART:2": ((1856, 0), (64, 64)),
+        "DMG": ((1920, 0), (64, 64)),
     }
 }
 

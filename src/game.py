@@ -12,7 +12,9 @@ from src.lib import utils
 from src.lib.input_manager import input_interpreter
 from src.game_objects.game_player import GamePlayer
 from src.game_objects.game_world import GameWorld
+from src.game_objects.game_actor import GameActor
 from src.game_data_templates.player_state import PLAYER_STATE_TEMPLATE
+from src.game_data_templates.actor_templates import ACTOR_FUNCTION_MAP
 from src.game_data_templates.game_world_state import GAME_WORLD_STATE_TEMPLATE
 from src.game_data_templates.game_player_hitbox_config import GAME_PLAYER_HITBOX_CONFIG
 
@@ -34,6 +36,16 @@ GAME_PLAYER_LIST = [GAME_PLAYER_ONE]
 GAME_OBJECT_LIST = [GAME_WORLD, GAME_PLAYER_ONE]
 GAME_SYSTEM_INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
 
+def load_actor(game_state, actor_template):
+    name = actor_template[const.NAME]
+    triggers = {} if 'triggers' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['triggers']
+    update = False if 'update' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['update']
+    collision = False if 'collision' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['collision']
+    game_state[const.LOADED_ACTORS].append(
+        GameActor(actor_template, None, {}, triggers, update, collision)
+    )
+
+
 def init_game(game_state):
     # pylint: disable=no-member
     pygame.init()
@@ -45,8 +57,13 @@ def init_game(game_state):
     ))
 
     game_state[const.LEVEL] = level_manager.get_level(sys.argv[-1])
-    game_state[const.GAME_CLOCK] = pygame.time.Clock()
 
+    # later move this to trigger whenever the initial spawn of the template comes close to screen
+    for actor in game_state[const.LEVEL][const.ACTORS]: load_actor(game_state, actor)
+
+    
+    game_state[const.GAME_CLOCK] = pygame.time.Clock()
+    
     # @TODO move to src.font_book.py
     game_state[const.FONTS][const.FONT_HELVETICA] = pygame.font.SysFont("Helvetica", 16)
 
@@ -69,6 +86,7 @@ def print_game_states(game_state):
     utils.print_state(game_state)
     for game_obj in GAME_OBJECT_LIST:
         game_obj.print_state()
+
 
 def main_loop(game_state):
     while True:
