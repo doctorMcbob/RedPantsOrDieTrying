@@ -108,7 +108,7 @@ def main_loop(game_state):
 
         # Exit the game if the player or system has requested
         if game_state[const.SHOULD_EXIT_FLAG]:
-            return quit()
+            return
 
         if game_state[const.SHOULD_ADVANCE_FRAME]:
             # Advance to the next animation frame
