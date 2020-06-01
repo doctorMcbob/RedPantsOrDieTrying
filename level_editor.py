@@ -256,6 +256,12 @@ def select_from_list(l, pos, dim):
 def get_numeric_input(pos):
     num = ''
     while True:
+        surf = Surface((64, 16))
+        surf.fill((230, 230, 230))
+        surf.blit(HEL16.render(num, 0, (0, 0, 0)), (0, 0))
+        GAME_STATE[const.SCREEN].blit(surf, pos)
+        pygame.display.update()
+
         inp = expect_input()
         if inp == K_ESCAPE: return False
         if inp == K_BACKSPACE: num = num[:-1]
@@ -276,11 +282,6 @@ def get_numeric_input(pos):
 
         if inp in [K_SPACE, K_RETURN]: return bool(num) and int(num)
 
-        surf = Surface((64, 16))
-        surf.fill((230, 230, 230))
-        surf.blit(HEL16.render(num, 0, (0, 0, 0)), (0, 0))
-        GAME_STATE[const.SCREEN].blit(surf, pos)
-        pygame.display.update()
 
 def choose_position(path=None):
     while True:
@@ -353,7 +354,7 @@ def static_menu(name, obj, pos):
 
 def actor_menu(actor, pos):
     if actor is False: return
-    if actor is "new...": return actor_constructor()
+    if actor == "new...": return actor_constructor()
     keys = list(actor.keys())
     selected = 0
     while True:
@@ -400,9 +401,30 @@ def actor_menu(actor, pos):
                 path = make_path()
                 if path: actor[const.PATH] = path
 
-# TODO
+def set_attr_menu(name, pos, dim):
+    surf = Surface(dim)
+    surf.fill((150, 150, 150))
+    surf.blit(HEL32.render(name, 0, (0, 0, 0)), (16, 16))
+    GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
+    draw_cursor()
+    GAME_STATE[const.SCREEN].blit(surf, pos)
+    return get_numeric_input((pos[0] + 16, pos[1] + 64))
+    
 def actor_constructor():
-    pass
+    name = select_from_list(list(ACTOR_FUNCTION_MAP.keys()), (0, 128), (128, 128))
+    if name is False: return
+    template = ACTOR_FUNCTION_MAP[name]['template']
+    keys = list(template.keys())
+    for key in keys:
+        if key == const.X_COORD: template[key] = int(CURSOR[0])
+        if key == const.Y_COORD: template[key] = int(CURSOR[1])
+        if key == const.PATH: template[key] = make_path()
+
+        if key in [const.HEIGHT, const.WIDTH, const.SPEED, const.TIMER]:
+            template[key] = int(set_attr_menu(key.value, (0, 0), (128, 128)))
+
+    LEVEL[const.ACTORS].append(template)
+
 
 def collision_select():
     pass
@@ -457,6 +479,7 @@ while True:
         if inp == K_a: actor_menu(select_from_list(LEVEL[const.ACTORS] + ["new..."], (0, 320), (256, 640)), (0, 0))
         if inp == K_RETURN: save(FILENAME)
     else:
+        if inp == K_a: actor_constructor()
         if inp == K_p: make_platform(LEVEL)
         if inp == K_r: LEVEL[const.SPAWN] = tuple(CURSOR)
         if inp == K_s: make_spike(LEVEL)
