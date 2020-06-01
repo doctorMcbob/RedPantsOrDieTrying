@@ -1,15 +1,30 @@
 """
 Level editor
 
+--- Guide ---
+keys:
+   p         -  make platform (first press sets corner, second press completes)
+   s         -  make spike
+   c         -  make collectable
+   r         -  move (re)spawn point   
+   a         -  make actor (starts construction menu)
+``return     -  play demo
+  space      -  select object via collision
+
+  Ctrl p     -  platform select menu
+  Ctrl s     -  spike select menu
+  Ctrl a     -  actor select menu
+Ctrl return  -  save
+  
 ~~ TO DO LIST ~~
 [x] show cursor coordinates
 [x] show moving platform path
  -- [x] during constructor 
-[] select objects through hit detection
-[] scrolling menus
+[x] select objects through hit detection
+[x] scrolling menus
+[] text entry field 
 [] saving without terminal
  -- [x] remember filename from commandline
-
 """
 import pygame
 from pygame.locals import *
@@ -160,7 +175,7 @@ def get_surface(level):
         surface.fill((150, 255, 150))
         surface.blit(font.render(actor[const.NAME], 0, (0, 0, 0)), (0, 0))
         surf.blit(surface, (actor[const.X_COORD] - xscroll , actor[const.Y_COORD] - yscroll))
-        if actor[const.NAME] == "Moving Platform": draw_path(surf, actor[const.PATH])
+        if const.PATH in actor: draw_path(surf, actor[const.PATH])
     if CORNER is not None: surf.blit(font.render("C", 0, (0, 0, 0)), (CORNER[0]-xscroll, CORNER[1]-yscroll))
 
     spwn = Surface((64, 64))
@@ -285,6 +300,13 @@ def get_numeric_input(pos):
 
 def choose_position(path=None):
     while True:
+        GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
+        if path is not None: draw_path(GAME_STATE[const.SCREEN], path)
+        draw_cursor()
+        GAME_STATE[const.SCREEN].blit(HEL32.render(str(CURSOR), 0, (0 ,0, 0)), (0, 0))
+        if path is not None: GAME_STATE[const.SCREEN].blit(HEL32.render("choose path", 0, (0, 0, 0)), (0, 32))
+        pygame.display.update()
+
         inp = expect_input()
         if inp == K_ESCAPE: return False
         if inp in [K_SPACE, K_RETURN]: return tuple(CURSOR)
@@ -293,11 +315,6 @@ def choose_position(path=None):
         if inp == K_DOWN: CURSOR[1] += 32
         if inp == K_UP: CURSOR[1] -= 32
 
-        GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
-        if path: draw_path(GAME_STATE[const.SCREEN], path)
-        draw_cursor()
-        GAME_STATE[const.SCREEN].blit(HEL32.render(str(CURSOR), 0, (0 ,0, 0)), (0, 0))
-        pygame.display.update()
 
 def make_path():
     path = []
@@ -427,7 +444,13 @@ def actor_constructor():
 
 
 def collision_select():
-    pass
+    hitbox = Rect(tuple(CURSOR), (32, 32))
+    i = hitbox.collidelist([Rect((p[0], p[1]), (p[2], p[3])) for p in LEVEL[const.PLATFORMS]])
+    if i != -1: return static_menu(const.PLATFORMS, LEVEL[const.PLATFORMS][i], (0, 0))
+    i = hitbox.collidelist([Rect((s[0], s[1]), (32, 32)) for s in LEVEL[const.SPIKES]])
+    if i != -1: return static_menu(const.SPIKES, LEVEL[const.SPIKES][i], (0, 0))
+    i = hitbox.collidelist([Rect((a[const.X_COORD], a[const.Y_COORD]), (a[const.WIDTH], a[const.HEIGHT])) for a in LEVEL[const.ACTORS]])
+    if i != -1: return actor_menu(LEVEL[const.ACTORS][i], (0, 0))
 
 # set up environment, emulate main loop
 def play(game_state):
