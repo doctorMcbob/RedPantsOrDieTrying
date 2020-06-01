@@ -58,11 +58,6 @@ from src.game_data_templates.input_config import (
     INPUT_CONFIG_TEMPLATE,
 )
 
-STATIC_OBJ_NAMES = {
-    const.PLATFORMS: ["X", "Y", "W", "H", "Image idx"],
-    const.SPIKES: ["X", "Y", "Direction"]
-}
-
 pygame.init()
 HEL32 = pygame.font.SysFont("Helvetica", 32)
 HEL16 = pygame.font.SysFont("Helvetica", 16)
@@ -128,7 +123,7 @@ def reset_game_state():
     GAME_STATE[const.GAME_CLOCK] = pygame.time.Clock()
     GAME_STATE[const.FONTS][const.FONT_HELVETICA] = pygame.font.SysFont("Helvetica", 16)
 
-    pygame.display.set_caption("lookin good")
+    pygame.display.set_caption("LEVEL EDITOR")
 
     return GAME_STATE
 
@@ -149,7 +144,9 @@ def get_surface(level):
     surf.fill((255, 255, 255))
     for plat in level[const.PLATFORMS]:
         surface = Surface((plat[2], plat[3]))
-        surface.fill([(100, 100, 100), (200, 100, 100), (100, 200, 100), (100, 100, 200)][plat[4]])
+        if 0 <= plat[4] <= 3:
+            surface.fill([(100, 100, 100), (200, 100, 100), (100, 200, 100), (100, 100, 200)][plat[4]])
+        else: surface.fill((80, 80, 80))
         surface.blit(font.render("Platform", 0, (0, 0, 0)), (0, 0))
         surf.blit(surface, (plat[0] - xscroll , plat[1] - yscroll))
     for spike in level[const.SPIKES]:
@@ -161,8 +158,7 @@ def get_surface(level):
     for actor in level[const.ACTORS]:
         surface = Surface((actor[const.WIDTH], actor[const.HEIGHT]))
         surface.fill((150, 255, 150))
-        surface.blit(font.render(actor[const.NAME], 0, (0, 0, 0)
-        ), (0, 0))
+        surface.blit(font.render(actor[const.NAME], 0, (0, 0, 0)), (0, 0))
         surf.blit(surface, (actor[const.X_COORD] - xscroll , actor[const.Y_COORD] - yscroll))
         if actor[const.NAME] == "Moving Platform": draw_path(surf, actor[const.PATH])
     if CORNER is not None: surf.blit(font.render("C", 0, (0, 0, 0)), (CORNER[0]-xscroll, CORNER[1]-yscroll))
@@ -172,6 +168,17 @@ def get_surface(level):
     surf.blit(spwn, (LEVEL[const.SPAWN][0] - xscroll , LEVEL[const.SPAWN][1] - yscroll))
     
     return surf
+
+def expect_input(expectlist=[]):
+    while True:
+        pygame.display.update()
+        for e in pygame.event.get():
+            if e.type == QUIT: quit()
+            if e.type == KEYDOWN:
+                if expectlist:
+                    if e.key in expectlist: return e.key
+                else: return e.key
+
 
 def draw_path(surf, path):
     if not path: return
@@ -199,17 +206,17 @@ def draw_cursor():
     
 
 def make_spike(level):
-    level[const.SPIKES].append([CURSOR[0], CURSOR[1], 0])
+    level[const.SPIKES].append([int(CURSOR[0]), int(CURSOR[1]), 0])
     
 def make_platform(level):
     global CORNER
     if CORNER is None:
         CORNER = CURSOR.copy()
         return
-    x = min(CURSOR[0], CORNER[0])
-    y = min(CURSOR[1], CORNER[1])
-    w = abs(CURSOR[0] - CORNER[0]) + 32
-    h = abs(CURSOR[1] - CORNER[1]) + 32
+    x = int(min(CURSOR[0], CORNER[0]))
+    y = int(min(CURSOR[1], CORNER[1]))
+    w = int(abs(CURSOR[0] - CORNER[0]) + 32)
+    h = int(abs(CURSOR[1] - CORNER[1]) + 32)
     
     level[const.PLATFORMS].append([x, y, w, h, 1])
 
@@ -239,39 +246,36 @@ def select_from_list(l, pos, dim):
         draw_cursor()
         GAME_STATE[const.SCREEN].blit(surf, (pos[0], pos[1] - (selected * 16)))
         pygame.display.update()
-        for e in pygame.event.get():
-            if e.type == QUIT: quit()
-            if e.type == KEYDOWN:
-                if e.key == K_ESCAPE: return False
-                if e.key == K_UP: selected = (selected - 1) % len(l)
-                if e.key == K_DOWN: selected = (selected + 1) % len(l)
-                if e.key in [K_RETURN, K_SPACE]:
-                    return l[selected]
+
+        inp = expect_input()
+        if inp == K_ESCAPE: return False
+        if inp == K_UP: selected = (selected - 1) % len(l)
+        if inp == K_DOWN: selected = (selected + 1) % len(l)
+        if inp in [K_RETURN, K_SPACE]: return l[selected]
 
 def get_numeric_input(pos):
     num = ''
     while True:
-        for e in pygame.event.get():
-            if e.type == QUIT: quit()
-            if e.type == KEYDOWN:
-                if e.key == K_ESCAPE: return False
-                if e.key == K_BACKSPACE: num = num[:-1]
+        inp = expect_input()
+        if inp == K_ESCAPE: return False
+        if inp == K_BACKSPACE: num = num[:-1]
                 
-                if e.key == K_0: num += '0'
-                if e.key == K_1: num += '1'
-                if e.key == K_2: num += '2'
-                if e.key == K_3: num += '3'
-                if e.key == K_4: num += '4'
-                if e.key == K_5: num += '5'
-                if e.key == K_6: num += '6'
-                if e.key == K_7: num += '7'
-                if e.key == K_8: num += '8'
-                if e.key == K_9: num += '9'
-                if e.key == K_MINUS:
-                    if num.startswith("-"): num = num[1:]
-                    else: num = "-" + num
+        if inp == K_0: num += '0'
+        if inp == K_1: num += '1'
+        if inp == K_2: num += '2'
+        if inp == K_3: num += '3'
+        if inp == K_4: num += '4'
+        if inp == K_5: num += '5'
+        if inp == K_6: num += '6'
+        if inp == K_7: num += '7'
+        if inp == K_8: num += '8'
+        if inp == K_9: num += '9'
+        if inp == K_MINUS:
+            if num.startswith("-"): num = num[1:]
+            else: num = "-" + num
 
-                if e.key in [K_SPACE, K_RETURN]: return bool(num) and int(num)
+        if inp in [K_SPACE, K_RETURN]: return bool(num) and int(num)
+
         surf = Surface((64, 16))
         surf.fill((230, 230, 230))
         surf.blit(HEL16.render(num, 0, (0, 0, 0)), (0, 0))
@@ -280,21 +284,13 @@ def get_numeric_input(pos):
 
 def choose_position(path=None):
     while True:
-        for e in pygame.event.get():
-            if e.type == QUIT: quit()
-            if e.type == KEYDOWN:
-                if e.key == K_ESCAPE:
-                    return False
-                if e.key in [K_SPACE, K_RETURN]:
-                    return tuple(CURSOR)
-                if e.key == K_RIGHT:
-                    CURSOR[0] += 32
-                if e.key == K_LEFT:
-                    CURSOR[0] -= 32
-                if e.key == K_DOWN:
-                    CURSOR[1] += 32
-                if e.key == K_UP:
-                    CURSOR[1] -= 32
+        inp = expect_input()
+        if inp == K_ESCAPE: return False
+        if inp in [K_SPACE, K_RETURN]: return tuple(CURSOR)
+        if inp == K_RIGHT: CURSOR[0] += 32
+        if inp == K_LEFT: CURSOR[0] -= 32
+        if inp == K_DOWN: CURSOR[1] += 32
+        if inp == K_UP: CURSOR[1] -= 32
 
         GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
         if path: draw_path(GAME_STATE[const.SCREEN], path)
@@ -302,12 +298,112 @@ def choose_position(path=None):
         GAME_STATE[const.SCREEN].blit(HEL32.render(str(CURSOR), 0, (0 ,0, 0)), (0, 0))
         pygame.display.update()
 
-def platform_menu(plat):
-    if plat is False: return
+def make_path():
+    path = []
+    pos =  choose_position(path)
+    while pos:
+        path.append(pos)
+        pos =  choose_position(path)
+    return path
+        
+def static_menu(name, obj, pos):
+    """
+    much better this time
+    """
+    if obj is False: return
+    selected = 0
+    while True:
+        surf = Surface((256, (len(obj) + 2) * 16 + 32))
+        surf.fill((150, 150, 150))
+        for i, text in enumerate(STATIC_OBJ_TEXT_KEY[name] + ["move", "delete"]):
+            col = (0, 0, 0) if i != selected else (200, 100, 100)
+            surf.blit(HEL16.render(text, 0, col), (16, 16 + (i * 16)))
+            if i < len(obj):
+                surf.blit(HEL16.render(str(obj[i]), 0, col), (128, 16 + (i * 16)))
 
-def spike_menu(spike):
-    if spike is False: return
-    
+        GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
+        draw_cursor()
+        GAME_STATE[const.SCREEN].blit(surf, pos)
+        pygame.display.update()
+
+        inp = expect_input()
+        if inp == K_ESCAPE: return
+
+        if inp == K_UP: selected = (selected - 1) % (len(obj) + 2)
+        if inp == K_DOWN: selected = (selected + 1) % (len(obj) + 2)
+
+        if selected >= len(obj):
+            if inp in [K_SPACE, K_RETURN]:
+                if selected == len(obj):
+                    obj[0], obj[1] = choose_position()
+                if selected == len(obj) + 1:
+                    LEVEL[name].remove(obj)
+                    return
+        elif type(obj[selected]) == int:
+            if inp in [K_SPACE, K_RETURN]:
+                n = get_numeric_input((126, 16 + (selected * 16)))
+                if not n is False: obj[selected] = n
+            
+            if inp == K_RIGHT: obj[selected] += 1
+            if inp == K_LEFT: obj[selected] -= 1
+            if pygame.key.get_mods() & KMOD_SHIFT:
+                if inp == K_RIGHT: obj[selected] += 15
+                if inp == K_LEFT: obj[selected] -= 15
+
+
+def actor_menu(actor, pos):
+    if actor is False: return
+    if actor is "new...": return actor_constructor()
+    keys = list(actor.keys())
+    selected = 0
+    while True:
+        surf = Surface((638, 32 + (16 * (len(keys) + 2))))
+        surf.fill((150, 150, 150))
+        for i, key in enumerate(keys + ["move", "delete"]):
+            col = (0, 0, 0) if selected != i else (200, 100, 100)
+            surf.blit(HEL16.render(str(key), 0, col), (16, 16 + (i * 16)))
+            if key in actor:
+                surf.blit(HEL16.render(str(actor[key]), 0, col), (320, 16 + (i * 16)))
+
+        GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
+        draw_cursor()
+        GAME_STATE[const.SCREEN].blit(surf, pos)
+        pygame.display.update()
+
+        inp = expect_input()
+        if inp == K_ESCAPE: return
+
+        if inp == K_UP: selected = (selected - 1) % (len(keys) + 2)
+        if inp == K_DOWN: selected = (selected + 1) % (len(keys) + 2)
+
+        if selected >= len(keys):
+            if inp in [K_SPACE, K_RETURN]:
+                if selected == len(keys):
+                    actor[const.X_COORD], actor[const.Y_COORD] = choose_position()
+                if selected == len(keys) + 1:
+                    LEVEL[const.ACTORS].remove(actor)
+                    return
+        
+        elif type(actor[keys[selected]]) == int: 
+            if inp in [K_SPACE, K_RETURN]:
+                n = get_numeric_input((320, 16 + (selected * 16)))
+                if not n is False: actor[keys[selected]] = n
+            
+            if inp == K_RIGHT: actor[keys[selected]] += 1
+            if inp == K_LEFT: actor[keys[selected]] -= 1
+            if pygame.key.get_mods() & KMOD_SHIFT:
+                if inp == K_RIGHT: actor[keys[selected]] += 15
+                if inp == K_LEFT: actor[keys[selected]] -= 15
+
+        elif keys[selected] == const.PATH:
+            if inp in [K_SPACE, K_RETURN]:
+                path = make_path()
+                if path: actor[const.PATH] = path
+
+# TODO
+def actor_constructor():
+    pass
+
 def collision_select():
     pass
 
@@ -342,29 +438,31 @@ def play(game_state):
 
 # main loop
 while True:
-    for e in pygame.event.get():
-        if e.type == QUIT: quit()
-        if e.type == KEYDOWN:
-            if e.key == K_RIGHT: CURSOR[0] += 32
-            if e.key == K_LEFT: CURSOR[0] -= 32
-            if e.key == K_UP: CURSOR[1] -= 32
-            if e.key == K_DOWN: CURSOR[1] += 32
-
-            if e.key == K_SPACE: collision_select()
-            
-            if pygame.key.get_mods() & KMOD_CTRL:
-                if e.key == K_p: platform_menu(select_from_list(LEVEL[const.PLATFORMS], (0, 320), (256, 640)))
-                if e.key == K_s: spike_menu(select_from_list(LEVEL[const.SPIKES], (0, 320), (256, 640)))
-                if e.key == K_RETURN: save(FILENAME)
-            else:
-                if e.key == K_p: make_platform(LEVEL)
-                if e.key == K_r: LEVEL[const.SPAWN] = tuple(CURSOR)
-                if e.key == K_s: make_spike(LEVEL)
-                if e.key == K_c: make_collectable(LEVEL)
-                if e.key == K_RETURN:
-                    GAME_STATE = reset_game_state()
-                    play(GAME_STATE)
-
     GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
     draw_cursor()
     pygame.display.update()
+
+    inp = expect_input()
+    if inp == K_RIGHT: CURSOR[0] += 32
+    if inp == K_LEFT: CURSOR[0] -= 32
+    if inp == K_UP: CURSOR[1] -= 32
+    if inp == K_DOWN: CURSOR[1] += 32
+
+    if inp == K_SPACE: collision_select()
+            
+    if pygame.key.get_mods() & KMOD_CTRL:
+        if inp == K_p: static_menu(const.PLATFORMS, select_from_list(LEVEL[const.PLATFORMS], (0, 320), (256, 640)), (0, 0))
+        if inp == K_s: static_menu(const.SPIKES, select_from_list(LEVEL[const.SPIKES], (0, 320), (256, 640)), (0, 0))
+
+        if inp == K_a: actor_menu(select_from_list(LEVEL[const.ACTORS] + ["new..."], (0, 320), (256, 640)), (0, 0))
+        if inp == K_RETURN: save(FILENAME)
+    else:
+        if inp == K_p: make_platform(LEVEL)
+        if inp == K_r: LEVEL[const.SPAWN] = tuple(CURSOR)
+        if inp == K_s: make_spike(LEVEL)
+        if inp == K_c: make_collectable(LEVEL)
+        if inp == K_RETURN:
+            GAME_STATE = reset_game_state()
+            play(GAME_STATE)
+
+
