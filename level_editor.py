@@ -22,8 +22,8 @@ Ctrl return  -  save
  -- [x] during constructor 
 [x] select objects through hit detection
 [x] scrolling menus
-[] text entry field 
-[] saving without terminal
+[x] text entry field 
+[x] saving without terminal
  -- [x] remember filename from commandline
 """
 import pygame
@@ -82,6 +82,17 @@ STATIC_OBJ_TEXT_KEY = {
     const.SPIKES: ["X", "Y", "direction"],
 }
 
+ALPHABET_KEY_MAP = {
+    K_a: "a", K_b: "b", K_c: "c", K_d: "d", K_e: "e",
+    K_f: "f", K_g: "g", K_h: "h", K_i: "i", K_j: "j",
+    K_k: "k", K_l: "l", K_m: "m", K_n: "n", K_o: "o",
+    K_p: "p", K_q: "q", K_r: "r", K_s: "s", K_t: "t",
+    K_u: "u", K_v: "v", K_w: "w", K_x: "x", K_y: "y",
+    K_z: "z", K_SPACE: " ", K_UNDERSCORE: "_",
+    K_0: "0", K_1: "1", K_2: "2", K_3: "3", K_4: "4",
+    K_5: "5", K_6: "6", K_7: "7", K_8: "8", K_9: "9",
+    K_PLUS: "+", K_MINUS: "-", K_COLON: ":",
+}
 # try to load level from command line
 try:
     FILENAME = sys.argv[-1]
@@ -108,7 +119,7 @@ def savable(d):
         
     
 def save(FILENAME=False):
-    filename = FILENAME or input("Save as (blank for NO SAVE)\n> ")
+    filename = FILENAME or get_text_input((0, 0))
     if not filename: return
     actors = []
     for i in range(len(LEVEL[const.ACTORS])):
@@ -268,10 +279,31 @@ def select_from_list(l, pos, dim):
         if inp == K_DOWN: selected = (selected + 1) % len(l)
         if inp in [K_RETURN, K_SPACE]: return l[selected]
 
+def get_text_input(pos):
+    string = ''
+    while True:
+        surf = Surface((128, 16))
+        surf.fill((230, 230, 230))
+        surf.blit(HEL16.render(string, 0, (0, 0, 0)), (0, 0))
+        GAME_STATE[const.SCREEN].blit(surf, pos)
+        pygame.display.update()
+
+        inp = expect_input()
+        if inp == K_ESCAPE: return False
+        if inp == K_BACKSPACE: string = string[:-1]
+        if inp == K_RETURN: return string
+        
+        if pygame.key.get_mods() & KMOD_SHIFT:
+            if inp in ALPHABET_KEY_MAP:
+                string = string + ALPHABET_KEY_MAP[inp].upper()
+        elif inp in ALPHABET_KEY_MAP:
+            string = string + ALPHABET_KEY_MAP[inp]
+
+
 def get_numeric_input(pos):
     num = ''
     while True:
-        surf = Surface((64, 16))
+        surf = Surface((128, 16))
         surf.fill((230, 230, 230))
         surf.blit(HEL16.render(num, 0, (0, 0, 0)), (0, 0))
         GAME_STATE[const.SCREEN].blit(surf, pos)
@@ -413,6 +445,11 @@ def actor_menu(actor, pos):
                 if inp == K_RIGHT: actor[keys[selected]] += 15
                 if inp == K_LEFT: actor[keys[selected]] -= 15
 
+        elif type(actor[keys[selected]]) == str:
+            if inp in [K_SPACE, K_RETURN]:
+                s = get_text_input((320, 16 + (selected * 16)))
+                if not s is False: actor[keys[selected]] = s
+
         elif keys[selected] == const.PATH:
             if inp in [K_SPACE, K_RETURN]:
                 path = make_path()
@@ -510,5 +547,3 @@ while True:
         if inp == K_RETURN:
             GAME_STATE = reset_game_state()
             play(GAME_STATE)
-
-
