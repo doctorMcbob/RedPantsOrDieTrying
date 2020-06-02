@@ -25,6 +25,7 @@ Ctrl return  -  save
 [x] text entry field 
 [x] saving without terminal
  -- [x] remember filename from commandline
+[x] log text
 """
 import pygame
 from pygame.locals import *
@@ -77,6 +78,9 @@ pygame.init()
 HEL32 = pygame.font.SysFont("Helvetica", 32)
 HEL16 = pygame.font.SysFont("Helvetica", 16)
 
+LOG = Surface((256, 1024))
+LOG.fill((150, 150, 150))
+
 STATIC_OBJ_TEXT_KEY = {
     const.PLATFORMS: ["X", "Y", "Width", "Height", "image idx"],
     const.SPIKES: ["X", "Y", "direction"],
@@ -119,11 +123,15 @@ def savable(d):
         
     
 def save(FILENAME=False):
-    filename = FILENAME or get_text_input((0, 0))
+    if FILENAME: filename = FILENAME
+    if not FILENAME:
+        surf = Surface((256, 64))
+        surf.fill((150, 150, 150))
+        surf.blit(HEL16.render("Save as:", 0, (0, 0, 0)), (16, 16))
+        GAME_STATE[const.SCREEN].blit(surf, (0, 0))
+        filename = get_text_input((16, 32))
     if not filename: return
-    actors = []
-    for i in range(len(LEVEL[const.ACTORS])):
-        actors.append(savable(LEVEL[const.ACTORS][i]))
+    actors = [savable(a) for a in LEVEL[const.ACTORS]]
 
     level = {
         "SPAWN": LEVEL[const.SPAWN],
@@ -134,6 +142,7 @@ def save(FILENAME=False):
     }
     with open(path_to_levels / filename, "w") as f:
         f.write(repr(level))
+    log("saved as " + filename)
 
 
 def reset_game_state():
@@ -205,7 +214,18 @@ def expect_input(expectlist=[]):
                     if e.key in expectlist: return e.key
                 else: return e.key
 
+def log(text):
+    global LOG
+    new = Surface((256, 1024))
+    new.fill((150, 150, 150))
+    new.blit(LOG, (0, 16))
+    new.blit(HEL16.render(text, 0, (0, 0, 0)), (0, 0))
+    LOG = new
 
+def show_log():
+    GAME_STATE[const.SCREEN].blit(LOG, (GAME_STATE[const.WIDTH]-256, 0))
+    expect_input()
+    
 def draw_path(surf, path):
     if not path: return
     xscroll = CURSOR[0] - GAME_STATE[const.WIDTH] // 2
@@ -233,6 +253,7 @@ def draw_cursor():
 
 def make_spike(level):
     level[const.SPIKES].append([int(CURSOR[0]), int(CURSOR[1]), 0])
+    log("made spike at " + str(CURSOR))
     
 def make_platform(level):
     global CORNER
@@ -247,12 +268,14 @@ def make_platform(level):
     level[const.PLATFORMS].append([x, y, w, h, 1])
 
     CORNER = None
-
+    log("made platform at " + str((x, y)))
+    
 def make_collectable(level):
     template = COLLECTABLE_TEMPLATE.copy()
     template[const.X_COORD] = CURSOR[0]
     template[const.Y_COORD] = CURSOR[1]
     level[const.ACTORS].append(template)
+    log("made collectable at " + str(CURSOR))
 
 def select_from_list(l, pos, dim):
     global CURSOR
@@ -467,7 +490,7 @@ def set_attr_menu(name, pos, dim):
 def actor_constructor():
     name = select_from_list(list(ACTOR_FUNCTION_MAP.keys()), (0, 128), (128, 128))
     if name is False: return
-    template = ACTOR_FUNCTION_MAP[name]['template']
+    template = ACTOR_FUNCTION_MAP[name]['template'].copy()
     keys = list(template.keys())
     for key in keys:
         if key == const.X_COORD: template[key] = int(CURSOR[0])
@@ -478,7 +501,7 @@ def actor_constructor():
             template[key] = int(set_attr_menu(key.value, (0, 0), (128, 128)))
 
     LEVEL[const.ACTORS].append(template)
-
+    log("made " + name + " at " + str(CURSOR))
 
 def collision_select():
     hitbox = Rect(tuple(CURSOR), (32, 32))
@@ -521,6 +544,7 @@ def play(game_state):
 # main loop
 while True:
     GAME_STATE[const.SCREEN].blit(get_surface(LEVEL), (0, 0))
+    GAME_STATE[const.SCREEN].blit(LOG, (GAME_STATE[const.WIDTH]-256, GAME_STATE[const.HEIGHT]-16))
     draw_cursor()
     pygame.display.update()
 
@@ -539,6 +563,7 @@ while True:
         if inp == K_a: actor_menu(select_from_list(LEVEL[const.ACTORS] + ["new..."], (0, 320), (256, 640)), (0, 0))
         if inp == K_RETURN: save(FILENAME)
     else:
+        if inp == K_l: show_log()
         if inp == K_a: actor_constructor()
         if inp == K_p: make_platform(LEVEL)
         if inp == K_r: LEVEL[const.SPAWN] = tuple(CURSOR)
