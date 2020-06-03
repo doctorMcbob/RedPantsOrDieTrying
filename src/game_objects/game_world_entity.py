@@ -81,14 +81,16 @@ class GameWorldEntity(GameObject):
         non_tangibles = [Rect((actor.state[const.X_COORD], actor.state[const.Y_COORD]),
                               (actor.state[const.WIDTH], actor.state[const.HEIGHT]))
                          for actor in non_tang_map]
-        # this flag checks for a broken state where the player starts overlapped with a platform
-        brokeflag = self.state[const.HITBOX].collidelist(plats + tangibles) != -1
+        
         xflag, yflag = False, False
         actor = None
         hit = self.state[const.HITBOX].collidelist(tangibles)
         if hit != -1: tang_map[hit].collision_function(tang_map[hit], game_state, self)
         hit = self.state[const.HITBOX].collidelist(non_tangibles)
         if hit != -1: non_tang_map[hit].collision_function(non_tang_map[hit], game_state, self)
+
+        # this flag checks for a broken state where the player starts overlapped with a platform
+        brokeflag = self.state[const.HITBOX].collidelist(plats + tangibles) != -1
         
         # X axis
         if self.state[const.VELOCITY]:

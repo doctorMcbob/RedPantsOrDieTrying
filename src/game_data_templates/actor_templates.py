@@ -10,8 +10,9 @@
     ... happens when walking into a moving platform,
         causes X axis collision with platform below player
         warping the player to the end of the platform
-    [] 'stutter' when colliding with platform
-    ... not sure about solving this one
+    [x] 'stutter' when colliding with platform
+    [x] stuck in platform when platform moves up
+    ... these two were fixed in game_world_entity
 [] Trampolines
 \   [] entering trampoline perpendicular to bounce direction
     [] skipping past trampoline with high velocity
@@ -105,15 +106,17 @@ def responsive_collision(self, game_state, collider):
                 idx = i
 
         if idx == 0: collider.state[const.Y_COORD] = hbox.bottom
-        if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height - 5 # HACKY AF
+        if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height
         if idx == 2: collider.state[const.X_COORD] = hbox.right
         if idx == 3: collider.state[const.X_COORD] = hbox.left - cbox.width
+        if idx in [0, 1]:
+            collider.state[const.VERTICAL_VELOCITY] = 0
+            collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
     else:
         collider.state[const.X_COORD] += self.state[const.VELOCITY]
         collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
     collider.update_hitbox()
-    print(collider.state[const.X_COORD], collider.state[const.Y_COORD])
-
+    
 
 def trampoline_collision_function(self, game_state, collider):
     if self.state[const.DIRECTION]: collider.state[const.VELOCITY] *= -1

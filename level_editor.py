@@ -533,6 +533,7 @@ def play(game_state):
         if game_state[const.SHOULD_EXIT_FLAG]: return
         if game_state[const.SHOULD_ADVANCE_FRAME]:
             GAME_PLAYER_ONE.get_state()[const.FRAME] += 1
+            for actor in game_state[const.LOADED_ACTORS]: actor.update_function(actor, game_state, GAME_WORLD.state)
             GAME_PLAYER_ONE.update_state(game_state, GAME_WORLD.get_state(), raw_game_inputs)
             GAME_WORLD.update_state(game_state, GAME_PLAYER_ONE)
             if game_state[const.IS_DEBUG_MODE_ACTIVE]: print_game_states(game_state)

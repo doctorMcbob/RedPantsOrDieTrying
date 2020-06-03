@@ -114,6 +114,9 @@ def main_loop(game_state):
             # Advance to the next animation frame
             GAME_PLAYER_ONE.get_state()[const.FRAME] += 1
 
+            for actor in game_state[const.LOADED_ACTORS]:
+                actor.update_function(actor, game_state, GAME_WORLD.state)
+
             update_player_states(game_state, GAME_WORLD.get_state(), raw_game_inputs)
 
             # Apply latest state to the game world
