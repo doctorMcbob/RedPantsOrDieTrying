@@ -10,6 +10,9 @@
     ... happens when walking into a moving platform,
         causes X axis collision with platform below player
         warping the player to the end of the platform
+    [?] phase through platforms on x axis
+    ... not sure if this bug is fixed or not,
+        might have been fixed when the stutter got fixed
     [x] 'stutter' when colliding with platform
     [x] stuck in platform when platform moves up
     ... these two were fixed in game_world_entity
@@ -17,7 +20,8 @@
 \   [] entering trampoline perpendicular to bounce direction
     [] skipping past trampoline with high velocity
     ... should be fixed in GameWorldEntity, same
-        bug appears with platforms
+        bug appears with platforms. need to rework
+        hit detection.
 
 """
 import pygame
@@ -111,10 +115,13 @@ def responsive_collision(self, game_state, collider):
         if idx == 3: collider.state[const.X_COORD] = hbox.left - cbox.width
         if idx in [0, 1]:
             collider.state[const.VERTICAL_VELOCITY] = 0
-            collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
-    else:
-        collider.state[const.X_COORD] += self.state[const.VELOCITY]
-        collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
+            #collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
+        if idx in [2, 3]:
+            collider.state[const.VELOCITY] = 0
+            #collider.state[const.X_COORD] += self.state[const.VELOCITY]
+    
+    collider.state[const.X_COORD] += self.state[const.VELOCITY]
+    collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
     collider.update_hitbox()
     
 
