@@ -74,7 +74,8 @@ class GamePlayer(GameWorldEntity):
         if yflag and not self.state[const.VERTICAL_VELOCITY]:
                 # switch from most airborn states to LAND animation
                 if self.state[const.STATE] in [const.FALLING, const.AIR, const.DIVELANDJUMP,
-                                               const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2]:
+                                               const.KICKFLIP0, const.KICKFLIP1, const.KICKFLIP2,
+                                               const.WALL]:
                     self.state[const.STATE] = const.LAND
                     self.state[const.FRAME] = 0
 

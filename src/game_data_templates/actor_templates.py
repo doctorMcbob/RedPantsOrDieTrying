@@ -1,8 +1,9 @@
 """
 -- working on --
 [x] collectables
-[] timer "rings"
+[x] timer "rings"
 [] doors
+... after doors, think about making a playable demo
 
 -- Known bugs --
 [] Moving Platforms
@@ -116,12 +117,8 @@ def responsive_collision(self, game_state, collider):
         if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height
         if idx == 2: collider.state[const.X_COORD] = hbox.right
         if idx == 3: collider.state[const.X_COORD] = hbox.left - cbox.width
-        if idx in [0, 1]:
-            collider.state[const.VERTICAL_VELOCITY] = 0
-            #collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
-        if idx in [2, 3]:
-            collider.state[const.VELOCITY] = 0
-            #collider.state[const.X_COORD] += self.state[const.VELOCITY]
+        if idx in [0, 1]: collider.state[const.VERTICAL_VELOCITY] = 0
+        if idx in [2, 3]: collider.state[const.VELOCITY] = 0
     
     collider.state[const.X_COORD] += self.state[const.VELOCITY]
     collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
