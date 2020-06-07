@@ -17,7 +17,9 @@
     [x] stuck in platform when platform moves up
     ... these two were fixed in game_world_entity
 [] Trampolines
-\   [] entering trampoline perpendicular to bounce direction
+\   [x] entering trampoline perpendicular to bounce direction
+    [x] 'multli bounce' when inside trampoline 'bouncing' every frame
+    ... this fixed the perpendicular problem as well :)
     [] skipping past trampoline with high velocity
     ... should be fixed in GameWorldEntity, same
         bug appears with platforms. need to rework
@@ -54,6 +56,7 @@ TRAMPOLINE_TEMPLATE = {
     const.Y_COORD: 0,
     const.WIDTH: 0,
     const.HEIGHT: 0,
+    const.FLAG: [],
     const.DIRECTION: 0, # vertical if true else horizontal
     const.TRAITS: [],
 }
@@ -124,10 +127,25 @@ def responsive_collision(self, game_state, collider):
     collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
     collider.update_hitbox()
     
+TRAMPOLINE_BLACKLIST = [const.IDLE, const.RUN, const.DIVELAND, const.SLIDE, const.JUMPSQUAT]
 
 def trampoline_collision_function(self, game_state, collider):
+    if collider in self.state[const.FLAG]: return
+    else: self.state[const.FLAG].append(collider)
+    if collider.state[const.STATE] in TRAMPOLINE_BLACKLIST: return
     if self.state[const.DIRECTION]: collider.state[const.VELOCITY] *= -1
     else: collider.state[const.VERTICAL_VELOCITY] *= -1
+
+def trampoline_update_function(self, game_state, game_world_state):
+    if self.state[const.FLAG]:
+        hbox = Rect((self.state[const.X_COORD], self.state[const.Y_COORD]), (self.state[const.WIDTH], self.state[const.HEIGHT]))
+        removelist = []
+        for p in self.state[const.FLAG]:
+            if not hbox.colliderect(p.state[const.HITBOX]):
+                removelist.append(p)
+        for p in removelist:
+            self.state[const.FLAG].remove(p)
+
 
 def collectable_collision_function(self, game_state, collider):
     if self.state[const.STATE] in collider.inventory:
@@ -164,6 +182,7 @@ ACTOR_FUNCTION_MAP = {
     "Trampoline": {
         'template': TRAMPOLINE_TEMPLATE,
         'collision': trampoline_collision_function,
+        'update': trampoline_update_function,
     },
     "Collectable": {
         'template': COLLECTABLE_TEMPLATE,

@@ -86,6 +86,7 @@ class GameConstants(Enum):
     TANGIBLE = "TANGIBLE"
     TIMER = "TIMER"
     IDX = "IDX"
+    FLAG = "FLAG"
     # ----- states -----
     AIR = "AIR"
     SLIDE = "SLIDE"
