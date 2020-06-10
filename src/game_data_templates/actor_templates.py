@@ -7,21 +7,23 @@
 
 -- Known bugs --
 [] Moving Platforms
-\   [] 'warp' glitch
-    ... happens when walking into a moving platform,
-        causes X axis collision with platform below player
-        warping the player to the end of the platform
-    [?] phase through platforms on x axis
-    ... not sure if this bug is fixed or not,
-        might have been fixed when the stutter got fixed
+\   [x] 'warp' glitch
+    ... was caused because the hitbox is not aligned with X_COORD
+        changed to accomidate
+    [x] phase through platforms on x axis
     [x] 'stutter' when colliding with platform
     [x] stuck in platform when platform moves up
     ... these two were fixed in game_world_entity
+    [] 'warp' when moving platform pushes into platform
 [] Trampolines
 \   [x] entering trampoline perpendicular to bounce direction
     [x] 'multli bounce' when inside trampoline 'bouncing' every frame
     ... this fixed the perpendicular problem as well :)
-    [] skipping past trampoline with high velocity
+    []  jump lock [GAME BREAKING]
+    ... sometimes when you jump into a trampoline you get stuck in jump
+        pretty rare, problably frame perfect. maybe happens when
+        you get into a trampoline on the first frame out of jumpsquat
+    []  skipping past trampoline with high velocity
     ... should be fixed in GameWorldEntity, same
         bug appears with platforms. need to rework
         hit detection.
@@ -114,16 +116,17 @@ def responsive_collision(self, game_state, collider):
                 idx = i
 
         if idx == 0: collider.state[const.Y_COORD] = hbox.bottom
-        if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height
-        if idx == 2: collider.state[const.X_COORD] = hbox.right
-        if idx == 3: collider.state[const.X_COORD] = hbox.left - cbox.width
+        elif idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height
+        elif idx == 2: collider.state[const.X_COORD] = hbox.right - (cbox.width * 0.5)
+        elif idx == 3: collider.state[const.X_COORD] = hbox.left - (cbox.width * 1.5)
         if idx in [0, 1]: collider.state[const.VERTICAL_VELOCITY] = 0
         if idx in [2, 3]: collider.state[const.VELOCITY] = 0
-    
+
     collider.state[const.X_COORD] += self.state[const.VELOCITY]
     collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
     collider.update_hitbox()
-    
+
+
 TRAMPOLINE_BLACKLIST = [const.IDLE, const.RUN, const.DIVELAND, const.SLIDE, const.JUMPSQUAT]
 
 def trampoline_collision_function(self, game_state, collider):
