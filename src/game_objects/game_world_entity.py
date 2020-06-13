@@ -98,14 +98,21 @@ class GameWorldEntity(GameObject):
         hit = self.state[const.HITBOX].collidelist(non_tangibles)
         if hit != -1: non_tang_map[hit].collision_function(non_tang_map[hit], game_state, self)
 
-        hit = self.state[const.HITBOX].collidelist(plats)
-        if hit != -1: pass
+        hit = self.state[const.HITBOX].collidelist(plats + tangibles)
+        if hit != -1 and self.state[const.STATE] != const.DMG:
+            self.state[const.STATE] = const.DMG
+            self.state[const.FRAME] = 0
 
-        
         # X axis
-        if self.state[const.VELOCITY] :
+        if self.state[const.VELOCITY]:
             direction = 1 if self.state[const.VELOCITY] < 0 else -1
 
+            w = self.state[const.HITBOX].w
+            for n in range(self.state[const.VELOCITY] // w):
+                if self.state[const.HITBOX].move(w * n, 0).collidelist(plats + tangibles) != -1:
+                    self.state[const.VELOCITY] = (w * n) + (self.state[const.VELOCITY] % w)
+                    break
+            
             i = self.state[const.HITBOX].move(self.state[const.VELOCITY], 0).collidelist(tangibles)
             if i != -1: tang_map[i].collision_function(tang_map[i], game_state, self)
             # as long as hitbox -> x velocity collides with a platform, decrement x velocity
@@ -115,6 +122,12 @@ class GameWorldEntity(GameObject):
         # Y axis
         if self.state[const.VERTICAL_VELOCITY]:
             direction = 1 if self.state[const.VERTICAL_VELOCITY] < 0 else -1
+
+            h = self.state[const.HITBOX].h
+            for n in range(self.state[const.VERTICAL_VELOCITY] // h):
+                if self.state[const.HITBOX].move(0, h * n).collidelist(plats + tangibles) != -1:
+                    self.state[const.VERTICAL_VELOCITY] = (h * n) + (self.state[const.VERTICAL_VELOCITY] % h)
+                    break
 
             i = self.state[const.HITBOX].move(0, self.state[const.VERTICAL_VELOCITY]).collidelist(tangibles)
             # while hitbox -> y velocity collides with plat, decrement y velocity

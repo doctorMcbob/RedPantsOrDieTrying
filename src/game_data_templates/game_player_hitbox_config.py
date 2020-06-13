@@ -13,9 +13,9 @@ NORMAL_HITBOX_SIZE_CONFIG_STATE_KEY_LIST = [
 
 # States that require special hitbox size configurations
 SPECIAL_HITBOX_SIZE_CONFIG_STATE_KEY_MAP = {
-    const.DIVE: ((0, 0), (64, 64)),
-    const.DIVELAND: ((0, 32), (64, 32)),
-    const.DIVELANDJUMP: ((0, 0), (64, 64))
+    const.DIVE: ((16, 0), (32, 64)),
+    const.DIVELAND: ((16, 32), (32, 32)),
+    const.DIVELANDJUMP: ((16, 0), (32, 64))
 }
 
 DEFAULT_HITBOX_SIZE_CONFIG_STATE_KEY_MAP = SPECIAL_HITBOX_SIZE_CONFIG_STATE_KEY_MAP.copy()

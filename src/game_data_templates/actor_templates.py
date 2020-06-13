@@ -14,7 +14,9 @@
     [x] 'stutter' when colliding with platform
     [x] stuck in platform when platform moves up
     ... these two were fixed in game_world_entity
-    [] 'warp' when moving platform pushes into platform
+    []  'warp' when moving platform pushes into platform
+    []  'stutter'? when in the air and a moving platform is moving twords the player
+    ... causes walljump to behave differently
 [] Trampolines
 \   [x] entering trampoline perpendicular to bounce direction
     [x] 'multli bounce' when inside trampoline 'bouncing' every frame
@@ -23,7 +25,7 @@
     ... sometimes when you jump into a trampoline you get stuck in jump
         pretty rare, problably frame perfect. maybe happens when
         you get into a trampoline on the first frame out of jumpsquat
-    []  skipping past trampoline with high velocity
+    [x]  skipping past trampoline with high velocity
     ... should be fixed in GameWorldEntity, same
         bug appears with platforms. need to rework
         hit detection.
