@@ -51,7 +51,7 @@ sys.path.append(ROOT_DIR.as_posix())
 path_to_levels = Path('.') / "src/game_levels/bin/"
 
 from src.game import *
-from src.game_levels.levels import load_level
+from src.game_levels.levels import load_level, load_actor
 from src.const import GameConstants as const
 from src.config import GAME_CONFIG as config
 from src.game_data_templates.game_world_state import GAME_WORLD_STATE_TEMPLATE
@@ -60,12 +60,14 @@ from src.game_objects.game_world import GameWorld
 from src.lib.input_manager.input_handlers import (
     game as game_input_handler,
 )
+import src.lib.level_manager as level_manager
 
 from src.lib import utils
 from src.lib.input_manager import input_interpreter
 from src.game_objects.game_player import GamePlayer
 from src.game_objects.game_world import GameWorld
 from src.game_objects.game_actor import GameActor
+from src.game_objects.game_world_entity import GameWorldEntity
 from src.game_data_templates.player_state import PLAYER_STATE_TEMPLATE
 from src.game_data_templates.game_world_state import GAME_WORLD_STATE_TEMPLATE
 from src.game_data_templates.game_player_hitbox_config import GAME_PLAYER_HITBOX_CONFIG
@@ -97,6 +99,7 @@ ALPHABET_KEY_MAP = {
     K_5: "5", K_6: "6", K_7: "7", K_8: "8", K_9: "9",
     K_PLUS: "+", K_MINUS: "-", K_COLON: ":",
 }
+
 # try to load level from command line
 try:
     FILENAME = sys.argv[-1]
@@ -113,12 +116,32 @@ except IOError:
         const.ACTORS: [],
     }
 
+def load(game_state):
+    global LEVEL, FILENAME
+    surf = Surface((256, 64))
+    surf.fill((150, 150, 150)) 
+    surf.blit(HEL16.render("(have you saved?) Load:", 0, (0, 0, 0)), (16, 16))
+    GAME_STATE[const.SCREEN].blit(surf, (0, 0))
+    filename = get_text_input((16, 32))
+    if not filename: return
+    FILENAME = filename
+    LEVEL = load_level(filename)
+    level_manager.get_level(game_state, filename)
 
 def savable(d):
     new = {}
     for key in d.keys():
         if type(key) == const: new[key.name] = d[key]
         else: new[key] = d[key]
+
+        try:
+            for thing in new[key.name]:
+                if isinstance(thing, GameWorldEntity):
+                    print(thing)
+                    new.remove(thing)
+        except TypeError:
+            continue # object is not iterable
+            
     return new
         
     
@@ -152,8 +175,7 @@ def reset_game_state():
         GAME_STATE[const.HEIGHT]
     ))
     GAME_STATE[const.LEVEL] = LEVEL
-    GAME_STATE[const.LOADED_ACTORS] = []
-    for actor in GAME_STATE[const.LEVEL][const.ACTORS]: load_actor(GAME_STATE, actor)
+    GAME_STATE[const.LOADED_ACTORS] = [load_actor(actor) for actor in LEVEL[const.ACTORS]]
 
     GAME_STATE[const.GAME_CLOCK] = pygame.time.Clock()
     GAME_STATE[const.FONTS][const.FONT_HELVETICA] = pygame.font.SysFont("Helvetica", 16)
@@ -473,6 +495,10 @@ def actor_menu(actor, pos):
                 s = get_text_input((320, 16 + (selected * 16)))
                 if not s is False: actor[keys[selected]] = s
 
+        elif keys[selected] == const.DROP:
+            if inp in [K_SPACE, K_RETURN]:
+                actor[keys[selected]] = choose_position()
+
         elif keys[selected] == const.PATH:
             if inp in [K_SPACE, K_RETURN]:
                 path = make_path()
@@ -563,6 +589,7 @@ while True:
 
         if inp == K_a: actor_menu(select_from_list(LEVEL[const.ACTORS] + ["new..."], (0, 320), (256, 640)), (0, 0))
         if inp == K_RETURN: save(FILENAME)
+        if inp == K_BACKSPACE: load(GAME_STATE)
     else:
         if inp == K_l: show_log()
         if inp == K_a: actor_constructor()

@@ -3,6 +3,8 @@ import pygame
 import sys
 
 import src.lib.level_manager as level_manager
+import src.lib as lib
+
 
 from src.lib.input_manager.input_handlers import (
     game as game_input_handler,
@@ -36,15 +38,6 @@ GAME_PLAYER_LIST = [GAME_PLAYER_ONE]
 GAME_OBJECT_LIST = [GAME_WORLD, GAME_PLAYER_ONE]
 GAME_SYSTEM_INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
 
-def load_actor(game_state, actor_template):
-    name = actor_template[const.NAME]
-    triggers = {} if 'triggers' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['triggers']
-    update = False if 'update' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['update']
-    collision = False if 'collision' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['collision']
-    game_state[const.LOADED_ACTORS].append(
-        GameActor(actor_template, None, {}, triggers, update, collision)
-    )
-
 
 def init_game(game_state):
     # pylint: disable=no-member
@@ -56,12 +49,9 @@ def init_game(game_state):
         game_state[const.HEIGHT]
     ))
 
-    game_state[const.LEVEL] = level_manager.get_level(sys.argv[-1])
+    level = sys.argv[-1] if len(sys.argv) > 1 else const.DEFAULT_LEVEL
+    level_manager.get_level(game_state, level)
 
-    # later move this to trigger whenever the initial spawn of the template comes close to screen
-    for actor in game_state[const.LEVEL][const.ACTORS]: load_actor(game_state, actor)
-
-    
     game_state[const.GAME_CLOCK] = pygame.time.Clock()
     
     # @TODO move to src.font_book.py

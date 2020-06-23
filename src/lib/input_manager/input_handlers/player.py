@@ -31,6 +31,9 @@ def move_player_left_stop(state):
     """Stop moving to the left when in motion"""
     state[GameConstants.MOVE] += 1
 
+def update_door(state):
+    state[GameConstants.DOOR] = True
+
 BUTTON_PRESS_INPUT_KEY_HANDLER_MAP = {
     InputConstants.BUTTON_RIGHT: move_player_right,
     InputConstants.BUTTON_LEFT: move_player_left,
@@ -41,6 +44,7 @@ BUTTON_PRESS_INPUT_KEY_HANDLER_MAP = {
 BUTTON_RELEASE_INPUT_KEY_HANDLER_MAP = {
     InputConstants.BUTTON_RIGHT: move_player_right_stop,
     InputConstants.BUTTON_LEFT: move_player_left_stop,
+    InputConstants.BUTTON_UP: update_door,
 }
 
 def process_input(state, player_input_data):

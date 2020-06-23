@@ -55,6 +55,8 @@ class GameConstants(Enum):
     DIVELJSTR = "DIVELJSTR"
     BONKLF = "BONKLF"
     FA = "FA"
+    DOOR = "DOOR"
+    DROP = "DROP"
     KICKFLIPSTR = "KICKFLIPSTR"
     KICKFLIPLIMIT = "KICKFLIPLIMIT"
     SCREEN = "SCREEN"

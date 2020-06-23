@@ -95,6 +95,7 @@ class GamePlayer(GameWorldEntity):
             self.state[const.VERTICAL_VELOCITY] = 0
                     
     def update_state(self, game_state, game_world_state, raw_game_inputs):
+        self.__reset_door()
         player_inputs = self.__parse_inputs(raw_game_inputs)
 
         if player_inputs:
@@ -120,6 +121,9 @@ class GamePlayer(GameWorldEntity):
 
     def update_controls(self, new_input_config):
         self.state[const.INPUT_CONFIG] = new_input_config
+
+    def __reset_door(self):
+        self.state[const.DOOR] = False
 
     def __apply_slide_state(self):
         if self.state[const.VELOCITY] == 0:

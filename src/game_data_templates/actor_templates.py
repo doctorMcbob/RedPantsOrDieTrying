@@ -34,6 +34,8 @@
 import pygame
 from pygame.rect import Rect
 
+import src.lib as lib
+
 from src.const import GameConstants as const
 
 from math import sqrt
@@ -89,6 +91,18 @@ TIMER_RINGS_TEMPLATE = {
     const.HEIGHT: 128,
     const.PATH: [(const.X_COORD, const.Y_COORD)],
     const.TRAITS: [],
+}
+
+DOOR_TEMPLATE = {
+    const.STATE: "door",
+    const.NAME: "Door",
+    const.X_COORD: 0,
+    const.Y_COORD: 0,
+    const.WIDTH: 64,
+    const.HEIGHT: 64,
+    const.LEVEL: "",
+    const.DROP: (0, 0),
+    const.TRAITS: []
 }
 
 def moving_platform_update_function(self, game_state, game_world_state):
@@ -175,6 +189,12 @@ def timer_rings_collision_function(self, game_state, collider):
     self.state[const.COUNTER] = self.state[const.TIMER]
     self.state[const.IDX] += 1
 
+def door_collision_function(self, game_state, collider):
+    if collider.state[const.DOOR]:
+        lib.level_manager.get_level(game_state, self.state[const.LEVEL])
+        collider.state[const.X_COORD], collider.state[const.Y_COORD] = self.state[const.DROP]
+        collider.state[const.SPAWN] = self.state[const.DROP]
+
 ACTOR_FUNCTION_MAP = {
     "Moving Platform": {
         'template': MOVING_PLATFORM_TEMPLATE,
@@ -194,5 +214,9 @@ ACTOR_FUNCTION_MAP = {
         'template': TIMER_RINGS_TEMPLATE,
         'update': timer_rings_update_function,
         'collision': timer_rings_collision_function,
+    },
+    "Door": {
+        'template': DOOR_TEMPLATE,
+        'collision': door_collision_function,
     },
 }
