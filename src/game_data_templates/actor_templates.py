@@ -1,26 +1,40 @@
 """
 -- working on --
 [x] collectables
-[] timer "rings"
+[x] timer "rings"
 [] doors
+... after doors, think about making a playable demo
 
 -- Known bugs --
 [] Moving Platforms
-\   [] 'warp' glitch
-    ... happens when walking into a moving platform,
-        causes X axis collision with platform below player
-        warping the player to the end of the platform
-    [] 'stutter' when colliding with platform
-    ... not sure about solving this one
+\   [x] 'warp' glitch
+    ... was caused because the hitbox is not aligned with X_COORD
+        changed to accomidate
+    [x] phase through platforms on x axis
+    [x] 'stutter' when colliding with platform
+    [x] stuck in platform when platform moves up
+    ... these two were fixed in game_world_entity
+    []  'warp' when moving platform pushes into platform
+    []  'stutter'? when in the air and a moving platform is moving twords the player
+    ... causes walljump to behave differently
 [] Trampolines
-\   [] entering trampoline perpendicular to bounce direction
-    [] skipping past trampoline with high velocity
+\   [x] entering trampoline perpendicular to bounce direction
+    [x] 'multli bounce' when inside trampoline 'bouncing' every frame
+    ... this fixed the perpendicular problem as well :)
+    []  jump lock [GAME BREAKING]
+    ... sometimes when you jump into a trampoline you get stuck in jump
+        pretty rare, problably frame perfect. maybe happens when
+        you get into a trampoline on the first frame out of jumpsquat
+    [x]  skipping past trampoline with high velocity
     ... should be fixed in GameWorldEntity, same
-        bug appears with platforms
+        bug appears with platforms. need to rework
+        hit detection.
 
 """
 import pygame
 from pygame.rect import Rect
+
+import src.lib as lib
 
 from src.const import GameConstants as const
 
@@ -49,6 +63,7 @@ TRAMPOLINE_TEMPLATE = {
     const.Y_COORD: 0,
     const.WIDTH: 0,
     const.HEIGHT: 0,
+    const.FLAG: [],
     const.DIRECTION: 0, # vertical if true else horizontal
     const.TRAITS: [],
 }
@@ -78,6 +93,18 @@ TIMER_RINGS_TEMPLATE = {
     const.TRAITS: [],
 }
 
+DOOR_TEMPLATE = {
+    const.STATE: "door",
+    const.NAME: "Door",
+    const.X_COORD: 0,
+    const.Y_COORD: 0,
+    const.WIDTH: 64,
+    const.HEIGHT: 64,
+    const.LEVEL: "",
+    const.DROP: (0, 0),
+    const.TRAITS: []
+}
+
 def moving_platform_update_function(self, game_state, game_world_state):
     X, Y = round(self.state[const.X_COORD]), round(self.state[const.Y_COORD])
     X_, Y_ = self.state[const.PATH][self.state[const.COUNTER]]
@@ -105,19 +132,36 @@ def responsive_collision(self, game_state, collider):
                 idx = i
 
         if idx == 0: collider.state[const.Y_COORD] = hbox.bottom
-        if idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height - 5 # HACKY AF
-        if idx == 2: collider.state[const.X_COORD] = hbox.right
-        if idx == 3: collider.state[const.X_COORD] = hbox.left - cbox.width
-    else:
-        collider.state[const.X_COORD] += self.state[const.VELOCITY]
-        collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
-    collider.update_hitbox()
-    print(collider.state[const.X_COORD], collider.state[const.Y_COORD])
+        elif idx == 1: collider.state[const.Y_COORD] = hbox.top - cbox.height
+        elif idx == 2: collider.state[const.X_COORD] = hbox.right - (cbox.width * 0.5)
+        elif idx == 3: collider.state[const.X_COORD] = hbox.left - (cbox.width * 1.5)
+        if idx in [0, 1]: collider.state[const.VERTICAL_VELOCITY] = 0
+        if idx in [2, 3]: collider.state[const.VELOCITY] = 0
 
+    collider.state[const.X_COORD] += self.state[const.VELOCITY]
+    collider.state[const.Y_COORD] += self.state[const.VERTICAL_VELOCITY]
+    collider.update_hitbox()
+
+
+TRAMPOLINE_BLACKLIST = [const.IDLE, const.RUN, const.DIVELAND, const.SLIDE, const.JUMPSQUAT]
 
 def trampoline_collision_function(self, game_state, collider):
+    if collider in self.state[const.FLAG]: return
+    else: self.state[const.FLAG].append(collider)
+    if collider.state[const.STATE] in TRAMPOLINE_BLACKLIST: return
     if self.state[const.DIRECTION]: collider.state[const.VELOCITY] *= -1
     else: collider.state[const.VERTICAL_VELOCITY] *= -1
+
+def trampoline_update_function(self, game_state, game_world_state):
+    if self.state[const.FLAG]:
+        hbox = Rect((self.state[const.X_COORD], self.state[const.Y_COORD]), (self.state[const.WIDTH], self.state[const.HEIGHT]))
+        removelist = []
+        for p in self.state[const.FLAG]:
+            if not hbox.colliderect(p.state[const.HITBOX]):
+                removelist.append(p)
+        for p in removelist:
+            self.state[const.FLAG].remove(p)
+
 
 def collectable_collision_function(self, game_state, collider):
     if self.state[const.STATE] in collider.inventory:
@@ -145,6 +189,12 @@ def timer_rings_collision_function(self, game_state, collider):
     self.state[const.COUNTER] = self.state[const.TIMER]
     self.state[const.IDX] += 1
 
+def door_collision_function(self, game_state, collider):
+    if collider.state[const.DOOR]:
+        lib.level_manager.get_level(game_state, self.state[const.LEVEL])
+        collider.state[const.X_COORD], collider.state[const.Y_COORD] = self.state[const.DROP]
+        collider.state[const.SPAWN] = self.state[const.DROP]
+
 ACTOR_FUNCTION_MAP = {
     "Moving Platform": {
         'template': MOVING_PLATFORM_TEMPLATE,
@@ -154,6 +204,7 @@ ACTOR_FUNCTION_MAP = {
     "Trampoline": {
         'template': TRAMPOLINE_TEMPLATE,
         'collision': trampoline_collision_function,
+        'update': trampoline_update_function,
     },
     "Collectable": {
         'template': COLLECTABLE_TEMPLATE,
@@ -163,5 +214,9 @@ ACTOR_FUNCTION_MAP = {
         'template': TIMER_RINGS_TEMPLATE,
         'update': timer_rings_update_function,
         'collision': timer_rings_collision_function,
+    },
+    "Door": {
+        'template': DOOR_TEMPLATE,
+        'collision': door_collision_function,
     },
 }

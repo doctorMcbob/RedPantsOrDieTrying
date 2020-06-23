@@ -1,6 +1,7 @@
 from src.config import GAME_CONFIG as config
 from src.const import GameConstants as const
-
+from src.game_objects.game_actor import GameActor
+from src.game_data_templates.actor_templates import ACTOR_FUNCTION_MAP
 from pathlib import Path
 
 import sys
@@ -13,6 +14,13 @@ def unpack_consts(d):
         if key in dir(const): new[const[key]] = d[key]
         else: new[key] = d[key]
     return new
+
+def load_actor(actor_template):
+    name = actor_template[const.NAME]
+    triggers = {} if 'triggers' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['triggers']
+    update = False if 'update' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['update']
+    collision = False if 'collision' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['collision']
+    return GameActor(actor_template, None, {}, triggers, update, collision)
 
 def load_level(filename):
     with open(path_to_levels / filename, "r") as f:

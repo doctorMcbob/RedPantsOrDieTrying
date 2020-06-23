@@ -23,9 +23,7 @@ class GameWorld(GameObject):
         player_one_x = player_one_state[const.X_COORD]
         player_one_y = player_one_state[const.Y_COORD]
 
-        for actor in game_state[const.LOADED_ACTORS]:
-            actor.update_function(actor, game_state, self.state)
-        
+                
         board_width = game_state[const.WIDTH]
         board_height = game_state[const.HEIGHT]
 
