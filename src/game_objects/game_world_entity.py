@@ -40,8 +40,6 @@ class GameWorldEntity(GameObject):
 
                 game_frame -= 1
             
-
-        
         game_state_string = self.state[const.NAME]
         
         draft = Surface((
@@ -65,7 +63,7 @@ class GameWorldEntity(GameObject):
         if self.state[const.STATE] in self.state[const.HITBOX_CONFIG]:
             hitbox_pos, hitbox_size = self.state[const.HITBOX_CONFIG].get(self.state[const.STATE])
         else:
-            hitbox_pos = (self.state[const.X_COORD], self.state[const.Y_COORD])
+            hitbox_pos = (0, 0)
             hitbox_size = (self.state[const.WIDTH], self.state[const.HEIGHT])
         self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
 
@@ -91,7 +89,7 @@ class GameWorldEntity(GameObject):
         non_tangibles = [Rect((actor.state[const.X_COORD], actor.state[const.Y_COORD]),
                               (actor.state[const.WIDTH], actor.state[const.HEIGHT]))
                          for actor in non_tang_map]
-
+        
         # check if we are currently colliding with an actor, if so, resolve collision function  
         hit = self.state[const.HITBOX].collidelist(tangibles)
         if hit != -1: tang_map[hit].collision_function(tang_map[hit], game_state, self)
@@ -150,7 +148,13 @@ class GameWorldEntity(GameObject):
         self.state[const.HITBOX] = Rect((self.state[const.X_COORD] + hitbox_pos[0], self.state[const.Y_COORD] + hitbox_pos[1]), hitbox_size)
 
         spikes = [Rect((x, y), (32, 32)) for x, y, d in game_state[const.LEVEL][const.SPIKES]]
-
-        return self.state[const.HITBOX].collidelist(spikes) is not -1
+        hazard_actors = list(filter(lambda actor: 'HAZARD' in actor.state[const.TRAITS], game_state[const.LOADED_ACTORS]))
+        if self in hazard_actors: hazard_actors.remove(self)
+        hazards = [Rect(
+            (actor.state[const.X_COORD], actor.state[const.Y_COORD]),
+            (actor.state[const.WIDTH], actor.state[const.HEIGHT])
+        ) for actor in hazard_actors]
+        
+        return self.state[const.HITBOX].collidelist(spikes + hazards) is not -1
 
         

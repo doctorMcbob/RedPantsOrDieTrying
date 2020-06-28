@@ -2,8 +2,11 @@
 -- working on --
 [x] collectables
 [x] timer "rings"
-[] doors
+[x] doors
 ... after doors, think about making a playable demo
+[/] Enemies
+\   [x] Leaper
+
 
 -- Known bugs --
 [] Moving Platforms
@@ -51,7 +54,7 @@ MOVING_PLATFORM_TEMPLATE = {
     const.VERTICAL_VELOCITY: 0,
     const.COUNTER: 0,
     const.SPEED: 1,
-    const.TRAITS: ["TANGIBLE"],
+    const.TRAITS: ["TANGIBLE", "RELOAD"],
     
     const.PATH: [(const.X_COORD, const.Y_COORD)], # evaluated in level editor, when placing initially
 }
@@ -103,6 +106,23 @@ DOOR_TEMPLATE = {
     const.LEVEL: "",
     const.DROP: (0, 0),
     const.TRAITS: []
+}
+
+LEAPER_TEMPLATE = {
+    const.STATE: "idle",
+    const.NAME: "Leaper",
+    const.X_COORD: 0,
+    const.Y_COORD: 0,
+    const.WIDTH: 64,
+    const.HEIGHT: 32,
+    const.VELOCITY: 0,
+    const.VERTICAL_VELOCITY:0,
+    const.COUNTER: 0,
+    const.DIRECTION: 1,
+    const.DISTANCE: 128,
+    const.TRAITS: ["HAZARD", "GRAV", "RELOAD"],
+    const.HITBOX_CONFIG: [], # TODO
+    const.HITBOX: None,
 }
 
 def moving_platform_update_function(self, game_state, game_world_state):
@@ -186,14 +206,41 @@ def timer_rings_update_function(self, game_state, game_world_state):
         self.state[const.COUNTER] = self.state[const.TIMER]
 
 def timer_rings_collision_function(self, game_state, collider):
+    if collider not in game_state[const.PLAYERS]: return
     self.state[const.COUNTER] = self.state[const.TIMER]
     self.state[const.IDX] += 1
 
 def door_collision_function(self, game_state, collider):
+    if collider not in game_state[const.PLAYERS]: return
     if collider.state[const.DOOR]:
         lib.level_manager.get_level(game_state, self.state[const.LEVEL])
         collider.state[const.X_COORD], collider.state[const.Y_COORD] = self.state[const.DROP]
         collider.state[const.SPAWN] = self.state[const.DROP]
+
+def leaper_update_function(self, game_state, game_world_state):
+    self.state[const.COUNTER] += 1
+    if self.state[const.STATE] == "idle":
+        for player in game_state[const.PLAYERS]:
+            if self.state[const.X_COORD] - self.state[const.DISTANCE] <= player.state[const.X_COORD] <= self.state[const.X_COORD] + self.state[const.WIDTH] + self.state[const.DISTANCE] and self.state[const.Y_COORD] - self.state[const.DISTANCE] <= player.state[const.Y_COORD] <= self.state[const.Y_COORD] + self.state[const.HEIGHT] + self.state[const.DISTANCE]:
+                self.state[const.DIRECTION] = 1 if player.state[const.X_COORD] > self.state[const.X_COORD] else -1
+                self.state[const.STATE] = "leapstart"
+                self.state[const.COUNTER] = 0
+    if self.state[const.STATE] == "leapstart":
+        if self.state[const.COUNTER] >= 5:
+            self.state[const.VELOCITY] = self.state[const.DIRECTION] * 10
+            self.state[const.VERTICAL_VELOCITY] = -10
+            self.state[const.STATE] = "leaping"
+            self.state[const.COUNTER] = 0
+
+    flag = bool(self.state[const.VERTICAL_VELOCITY])
+    self.apply_platform_collision_detection(game_state)
+    if self.state[const.STATE] == "leaping" and flag and not bool(self.state[const.VERTICAL_VELOCITY]):
+        self.state[const.STATE] = "idle"
+        self.state[const.VELOCITY] = 0
+        self.state[const.COUNTER] = 0
+
+    self.update_movement_velocity(game_state, game_world_state)
+
 
 ACTOR_FUNCTION_MAP = {
     "Moving Platform": {
@@ -218,5 +265,9 @@ ACTOR_FUNCTION_MAP = {
     "Door": {
         'template': DOOR_TEMPLATE,
         'collision': door_collision_function,
+    },
+    "Leaper": {
+        'template': LEAPER_TEMPLATE,
+        'update': leaper_update_function,
     },
 }

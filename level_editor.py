@@ -545,6 +545,7 @@ def play(game_state):
         config[const.PLAYER_ONE_SPRITE_SHEET],
         GAME_PLAYER_HITBOX_CONFIG
     )
+    game_state[const.PLAYERS] = [GAME_PLAYER_ONE]
     GAME_WORLD = GameWorld(GAME_WORLD_STATE_TEMPLATE)
     GAME_SYSTEM_INPUT_CONFIG = INPUT_CONFIG_TEMPLATE.copy()
     GAME_PLAYER_ONE.initialize()

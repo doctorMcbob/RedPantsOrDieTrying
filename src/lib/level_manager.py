@@ -6,7 +6,11 @@ from src.config import GAME_CONFIG as config
 
 import sys
 
-levels_to_load = ['home', 'hallway', 'kitchen', 'livingroom', 'pantry']
+levels_to_load = [
+    'home', 'hallway', 'kitchen', 'livingroom', 'pantry',
+    'hallway2', 'foyer', 'stairs', 'basment', 'bedroom',
+    'closet', 'bathroom',
+]
 LEVEL_MAP = {}
 for level in levels_to_load:
     LEVEL_MAP[level] = load_level(level)
