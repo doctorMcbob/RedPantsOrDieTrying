@@ -50,6 +50,7 @@ def init_game(game_state):
     ))
 
     level = sys.argv[-1] if len(sys.argv) > 1 else const.DEFAULT_LEVEL
+    level_manager.init_levels()
     level_manager.get_level(game_state, level)
 
     game_state[const.GAME_CLOCK] = pygame.time.Clock()
@@ -57,7 +58,7 @@ def init_game(game_state):
     # @TODO move to src.font_book.py
     game_state[const.FONTS][const.FONT_HELVETICA] = pygame.font.SysFont("Helvetica", 16)
 
-    pygame.display.set_caption("lookin good")
+    pygame.display.set_caption("Red Pants or Die Trying | Demo")
 
     GAME_PLAYER_ONE.initialize()
     GAME_PLAYER_ONE.state[const.SPAWN] = game_state[const.LEVEL][const.SPAWN]

@@ -24,21 +24,22 @@ class GameWorldEntity(GameObject):
 
     def get_surface(self, game_state):
         if const.SPRITE_SHEET in self.state:
-            game_state_string = self.state[const.STATE].value
+            game_state_string = self.state[const.STATE] if type(self.state[const.STATE]) is not const else self.state[const.STATE].value
             sprites = self.state[const.SPRITE_SHEET]
 
             if game_state_string in sprites.keys():
                 return sprites[game_state_string]
 
-            game_frame = self.state[const.FRAME]
+            elif const.FRAME in self.state:
+                game_frame = self.state[const.FRAME]
 
-            while game_frame >= 0:
-                current_frame = game_state_string + ":" + str(game_frame)
+                while game_frame >= 0:
+                    current_frame = game_state_string + ":" + str(game_frame)
 
-                if current_frame in sprites:
-                    return sprites[current_frame]
+                    if current_frame in sprites:
+                        return sprites[current_frame]
 
-                game_frame -= 1
+                    game_frame -= 1
             
         game_state_string = self.state[const.NAME]
         

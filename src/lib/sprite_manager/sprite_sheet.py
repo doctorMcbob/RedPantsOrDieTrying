@@ -2,11 +2,23 @@ import pygame
 
 from pygame import Surface
 from src.game_sprites import player_one as player_one_sprite
+from src.game_sprites import (
+    platform_sprites, spike, trampoline, door,
+    collectable, movingplatform, leaper
+)
 
 # Enabled sprites
 SPRITE_SHEET_KEY_CONFIG_MAP = {
     "player": player_one_sprite.get_sprite(),
+    "spike": spike.get_sprite(),
+    "Trampoline": trampoline.get_sprite(),
+    "Door": door.get_sprite(),
+    "Collectable": collectable.get_sprite(),
+    "Moving Platform": movingplatform.get_sprite(),
+    "Leaper": leaper.get_sprite(),
 }
+for n in range(platform_sprites.plat_num):
+    SPRITE_SHEET_KEY_CONFIG_MAP["platform" + str(n)] = platform_sprites.get_sprite(n)
 
 def load_sprite_sheet(sprite_sheet_key):
     sprite_sheet_config = SPRITE_SHEET_KEY_CONFIG_MAP.get(sprite_sheet_key)

@@ -20,7 +20,8 @@ def load_actor(actor_template):
     triggers = {} if 'triggers' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['triggers']
     update = False if 'update' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['update']
     collision = False if 'collision' not in ACTOR_FUNCTION_MAP[name] else ACTOR_FUNCTION_MAP[name]['collision']
-    return GameActor(actor_template, None, {}, triggers, update, collision)
+    actor = GameActor(actor_template, actor_template[const.NAME], {}, triggers, update, collision)
+    return actor
 
 def load_level(filename):
     with open(path_to_levels / filename, "r") as f:
@@ -34,6 +35,7 @@ def load_level(filename):
 
     for i, actor in enumerate(level_data["ACTORS"]): 
         level_data["ACTORS"][i] = unpack_consts(actor)
+        
         
     return {
         const.SPAWN: level_data["SPAWN"],

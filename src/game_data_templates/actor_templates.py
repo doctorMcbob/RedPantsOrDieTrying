@@ -54,9 +54,8 @@ MOVING_PLATFORM_TEMPLATE = {
     const.VERTICAL_VELOCITY: 0,
     const.COUNTER: 0,
     const.SPEED: 1,
-    const.TRAITS: ["TANGIBLE", "RELOAD"],
-    
-    const.PATH: [(const.X_COORD, const.Y_COORD)], # evaluated in level editor, when placing initially
+    const.PATH: [],
+    const.TRAITS: ["TANGIBLE", "RELOAD"],    
 }
 
 TRAMPOLINE_TEMPLATE = {
@@ -184,6 +183,7 @@ def trampoline_update_function(self, game_state, game_world_state):
 
 
 def collectable_collision_function(self, game_state, collider):
+    if collider not in game_state[const.PLAYERS]: return
     if self.state[const.STATE] in collider.inventory:
         collider.inventory[self.state[const.STATE]] += 1
     else:
@@ -191,7 +191,6 @@ def collectable_collision_function(self, game_state, collider):
     game_state[const.LOADED_ACTORS].remove(self)
 
 def timer_rings_update_function(self, game_state, game_world_state):
-    
     if self.state[const.IDX] >= len(self.state[const.PATH]):
         # Figure out what to put here
         print("ZOINKS SCOOB")

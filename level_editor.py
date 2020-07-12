@@ -61,6 +61,7 @@ from src.lib.input_manager.input_handlers import (
     game as game_input_handler,
 )
 import src.lib.level_manager as level_manager
+from src.lib.sprite_manager.sprite_sheet import load_sprite_sheet
 
 from src.lib import utils
 from src.lib.input_manager import input_interpreter
@@ -201,16 +202,29 @@ def get_surface(level):
     surf.fill((255, 255, 255))
     for plat in level[const.PLATFORMS]:
         surface = Surface((plat[2], plat[3]))
-        if 0 <= plat[4] <= 3:
+        surface.fill((1, 255, 1))
+        try:
+            sprites = load_sprite_sheet("platform" + str(plat[4]))
+            for y in range(plat[3] // 32):
+                if y == 0: i = '0'
+                elif y == (plat[3] // 32) - 1: i = '2'
+                else: i = '1'
+                for x in range(plat[2] // 32):
+                    if x == 0: j = '0'
+                    elif x == (plat[2] // 32) - 1: j = '2'
+                    else: j = '1'
+
+                    surface.blit(sprites['p'+i+j], (x*32, y*32))
+
+        except KeyError:
             surface.fill([(100, 100, 100), (200, 100, 100), (100, 200, 100), (100, 100, 200)][plat[4]])
-        else: surface.fill((80, 80, 80))
-        surface.blit(font.render("Platform", 0, (0, 0, 0)), (0, 0))
+            surface.blit(font.render("Platform", 0, (0, 0, 0)), (0, 0))
+
+        surface.set_colorkey((1, 255, 1))
         surf.blit(surface, (plat[0] - xscroll , plat[1] - yscroll))
     for spike in level[const.SPIKES]:
-        surface = Surface((32, 32))
-        surface.fill((255, 100, 100))
-        surface.blit(font.render("Spike", 0, (0, 0, 0)
-        ), (0, 0))
+        surface = load_sprite_sheet("spike")['spike']
+        surface = pygame.transform.rotate(surface, spike[2] * 90)
         surf.blit(surface, (spike[0] - xscroll , spike[1] - yscroll))
     for actor in level[const.ACTORS]:
         surface = Surface((actor[const.WIDTH], actor[const.HEIGHT]))

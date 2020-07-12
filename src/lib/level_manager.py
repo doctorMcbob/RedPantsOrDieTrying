@@ -33,5 +33,7 @@ def get_level(game_state, game_level_key=False):
     game_state[const.LEVEL] = game_level_config
     game_state[const.LOADED_ACTORS] = LEVEL_ACTOR_MAP[game_level_key]
 
-
-    
+def init_levels():
+    for level in LEVEL_ACTOR_MAP.keys():
+        for actor in LEVEL_ACTOR_MAP[level]:
+            actor.initialize()
